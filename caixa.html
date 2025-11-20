@@ -426,31 +426,70 @@
         }
 
         function renderViewPedidos(orders) {
-            document.getElementById('page-title').innerText = "Pedidos Detalhados";
-            let html = `<table><thead><tr><th>Mesa</th><th>Status</th><th>Hora</th><th>Itens</th><th>Valor</th><th>Ação</th></tr></thead><tbody>`;
+            document.getElementById('page-title').innerText = "Todos os Pedidos (Detalhado)";
+            let html = `
+            <div class="table-wrapper">
+                <table>
+                    <thead><tr><th>Mesa</th><th>Status</th><th>Hora</th><th>Itens</th><th>Valor</th><th>Ação</th></tr></thead>
+                    <tbody>`;
             
             orders.sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0));
 
             orders.forEach(order => {
                 const date = order.created_at?.toDate ? order.created_at.toDate() : new Date();
                 const hora = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                let statusClass = 'st-pending'; let statusLabel = 'Novo'; let actionEnabled = true;
+                
+                let statusClass = 'st-pending'; 
+                let statusLabel = 'Novo'; 
+                let actionEnabled = true;
 
                 if(order.status === 'preparing') { statusClass = 'st-preparing'; statusLabel = 'Cozinha'; }
                 else if(order.status === 'ready') { statusClass = 'st-ready'; statusLabel = 'Pronto'; }
                 else if(order.status === 'served') { statusClass = 'st-served'; statusLabel = 'Servido'; }
-                else if(order.status === 'cancelled') { statusClass = 'st-cancelled'; statusLabel = 'Cancelado'; actionEnabled = false; }
+                else if(order.status === 'cancelled') { 
+                    statusClass = 'st-cancelled'; 
+                    statusLabel = 'CANCELADO'; 
+                    // actionEnabled agora continua true para permitir clicar no botão de limpar
+                }
 
                 const itensResumo = order.items.map(i => `${i.qty}x ${i.name}`).join(', ');
                 
-                let actionButton = `<button class="btn-pay" onclick="pagarPedidoUnico('${order.id}', ${order.table_number})" ${actionEnabled ? '' : 'disabled'}>Baixar</button>`;
-                if (order.status === 'ready') actionButton += `<button class="btn-served" onclick="marcarServido('${order.id}', ${order.table_number})" ${actionEnabled ? '' : 'disabled'}>Servir</button>`;
+                let actionButton = '';
 
-                html += `<tr><td>#${order.table_number}</td><td><span class="badge ${statusClass}">${statusLabel}</span></td><td>${hora}</td><td style="color:var(--text-secondary); white-space:normal;">${itensResumo}</td><td>R$ ${order.total_amount.toFixed(2)}</td><td>${actionButton}</td></tr>`;
+                // LÓGICA CORRIGIDA DOS BOTÕES
+                if (order.status === 'cancelled') {
+                    // Botão especial para limpar pedidos cancelados
+                    actionButton = `<button class="btn-pay" style="background-color: #757575;" onclick="arquivarPedido('${order.id}')">🗑️ Limpar</button>`;
+                } else {
+                    // Botão padrão de Baixar
+                    actionButton = `<button class="btn-pay" onclick="pagarPedidoUnico('${order.id}', ${order.table_number})" ${actionEnabled ? '' : 'disabled'}>Baixar Item</button>`;
+                    
+                    // Botão extra se estiver pronto
+                    if (order.status === 'ready') {
+                        actionButton += `<button class="btn-served" onclick="marcarServido('${order.id}', ${order.table_number})" ${actionEnabled ? '' : 'disabled'}>Servido</button>`;
+                    }
+                }
+
+                html += `
+                    <tr>
+                        <td style="font-weight:bold;">#${order.table_number}</td>
+                        <td><span class="badge ${statusClass}">${statusLabel}</span></td>
+                        <td>${hora}</td>
+                        <td style="color:var(--text-secondary);">${itensResumo}</td>
+                        <td>R$ ${order.total_amount.toFixed(2)}</td>
+                        <td>${actionButton}</td>
+                    </tr>`;
             });
-            html += `</tbody></table>`;
+            html += `</tbody></table></div>`;
             container.innerHTML = html;
         }
+
+        window.arquivarPedido = async (id) => {
+            if(confirm("Remover este pedido cancelado da lista?")) {
+                // Muda para 'finalizado', o que faz sumir da lista na próxima atualização
+                await api.updateOrderStatus(id, 'finalizado');
+            }
+        };
 
         window.openInvoiceDetail = (mesaNumero) => {
             const mesaData = window.mesasCache[mesaNumero];
