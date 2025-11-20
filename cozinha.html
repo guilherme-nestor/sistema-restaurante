@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Cozinha - KDS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    <style>
+        /* --- TEMAS (DARK MODE DEFAULT PARA COZINHA) --- */
+        :root { 
+            --bg: #1a1a1a; 
+            --text: #ffffff; 
+            --card-bg: #2d2d2d; 
+            --header-border: #333;
+            --item-border: #444;
+            --secondary-text: #aaa;
+            --accent: #ff9800;
+            --btn-hover: brightness(1.1);
+        }
+        
+        body.light-mode {
+            --bg: #f4f6f8;
+            --text: #333;
+            --card-bg: #ffffff;
+            --header-border: #ddd;
+            --item-border: #eee;
+            --secondary-text: #666;
+            --accent: #d32f2f;
+            --btn-hover: brightness(0.95);
+        }
+
+        * { box-sizing: border-box; transition: background-color 0.3s, color 0.3s; }
+        body { background-color: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; }
+        
+        /* HEADER */
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; border-bottom: 2px solid var(--header-border); padding-bottom: 15px; }
+        
+        .header-left { display: flex; align-items: center; gap: 15px; }
+        h1 { margin: 0; color: var(--accent); font-size: 2rem; font-weight: 800; letter-spacing: 1px; }
+        
+        #clock { font-size: 3rem; font-weight: bold; color: var(--text); letter-spacing: 2px; font-variant-numeric: tabular-nums; text-shadow: 0 2px 10px rgba(0,0,0,0.3); }
+
+        /* Botão Tema */
+        .theme-toggle { background: transparent; border: 1px solid var(--item-border); color: var(--text); width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; }
+        .theme-toggle:hover { background: rgba(255,255,255,0.1); }
+        body.light-mode .theme-toggle:hover { background: rgba(0,0,0,0.05); }
+
+        /* GRID PEDIDOS */
+        #orders-container { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px; }
+
+        .order-card { background: var(--card-bg); border-radius: 12px; overflow: hidden; border-left: 10px solid #888; animation: slideIn 0.4s ease-out; display: flex; flex-direction: column; box-shadow: 0 4px 15px rgba(0,0,0,0.3); position: relative; min-height: 250px; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Status Cores */
+        .status-pending { border-left-color: #ffc107; } /* Amarelo */
+        .status-preparing { border-left-color: #2196f3; } /* Azul */
+
+        /* Tag de Modificado */
+        .modified-tag { background: #D32F2F; color: white; font-weight: bold; text-align: center; padding: 8px; font-size: 1rem; letter-spacing: 1px; animation: pulse 2s infinite; text-transform: uppercase; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.8; } 100% { opacity: 1; } }
+
+        .card-header { padding: 15px; background: rgba(0,0,0,0.2); display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--item-border); }
+        .table-num { font-size: 1.8rem; font-weight: 900; color: var(--text); }
+        .timer { font-size: 1.1rem; font-family: monospace; color: var(--secondary-text); font-weight: bold; }
+
+        .card-body { padding: 20px; flex: 1; overflow-y: auto; }
+        .item-line { border-bottom: 1px dashed var(--item-border); padding: 12px 0; display: flex; flex-direction: column; font-size: 1.2rem; }
+        .item-line:last-child { border-bottom: none; }
+        
+        .item-main { display: flex; align-items: flex-start; line-height: 1.4; }
+        .item-qty { color: var(--accent); font-weight: 900; margin-right: 12px; font-size: 1.4rem; min-width: 30px; }
+        .item-name { font-weight: 600; }
+
+        .item-note { font-size: 1rem; color: #ffeb3b; font-style: italic; margin-top: 5px; display: block; padding-left: 42px; font-weight: 500; } 
+        body.light-mode .item-note { color: #d32f2f; } 
+
+        .card-actions { padding: 15px; background: rgba(0,0,0,0.1); border-top: 1px solid var(--item-border); }
+        
+        button.btn-ready { border: none; padding: 18px; border-radius: 8px; font-weight: 900; cursor: pointer; width: 100%; font-size: 1.2rem; transition: 0.2s; background: #2e7d32; color: white; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 6px rgba(0,0,0,0.2); display: flex; align-items: center; justify-content: center; gap: 10px; }
+        button.btn-ready:hover { filter: var(--btn-hover); transform: translateY(-2px); }
+        button.btn-ready:active { transform: translateY(0); }
+        
+        /* Toast Notification */
+        #toast { visibility: hidden; min-width: 350px; background-color: #222; color: #fff; text-align: center; border-radius: 50px; padding: 16px 30px; position: fixed; z-index: 100; left: 50%; bottom: 30px; transform: translateX(-50%); border: 2px solid #444; font-weight: bold; font-size: 1.1rem; opacity: 0; transition: 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; gap: 10px;}
+        #toast.show { visibility: visible; opacity: 1; bottom: 60px; }
+        #toast.success { border-color: #4caf50; color: #4caf50; background: #1a1a1a; }
+        
+        /* Responsividade Mobile */
+        @media (max-width: 768px) {
+            header { flex-direction: column; gap: 10px; align-items: flex-start; }
+            #clock { font-size: 2.5rem; align-self: flex-end; margin-top: -50px; }
+            .header-left { width: 100%; justify-content: space-between; }
+            #orders-container { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-left">
+            <button class="theme-toggle" onclick="toggleTheme()" title="Mudar Tema">
+                <span class="material-icons-round" id="theme-icon">light_mode</span>
+            </button>
+            <div>
+                <h1>👨‍🍳 COZINHA</h1>
+                <small style="color: var(--secondary-text); font-weight: 600; letter-spacing: 1px;">KDS SYSTEM</small>
+            </div>
+        </div>
+        <div id="clock">00:00</div>
+    </header>
+
+    <div id="orders-container">
+        <p style="text-align: center; grid-column: 1/-1; color: var(--secondary-text); font-size: 1.2rem; margin-top: 50px;">Aguardando conexão...</p>
+    </div>
+    
+    <div id="toast"><span class="material-icons-round">check_circle</span> Pedido finalizado!</div>
+
+    <script type="module">
+        import { SaasService } from './js/SaasService.js';
+        
+        // Inicializa API (Dinâmica pela URL)
+        const api = new SaasService(); 
+        
+        // --- LÓGICA DE TEMA ---
+        window.toggleTheme = () => {
+            const body = document.body;
+            const icon = document.getElementById('theme-icon');
+            if (body.classList.contains('light-mode')) {
+                body.classList.remove('light-mode');
+                icon.innerText = 'light_mode';
+                localStorage.setItem('kds_theme', 'dark');
+            } else {
+                body.classList.add('light-mode');
+                icon.innerText = 'dark_mode';
+                localStorage.setItem('kds_theme', 'light');
+            }
+        };
+        // KDS Padrão é Dark, se usuário salvou light, aplica
+        if (localStorage.getItem('kds_theme') === 'light') {
+            document.body.classList.add('light-mode');
+            document.getElementById('theme-icon').innerText = 'dark_mode';
+        }
+
+        const container = document.getElementById('orders-container');
+
+        // --- ESCUTAR PEDIDOS ---
+        api.listenToOrders((orders) => {
+            container.innerHTML = ""; 
+            
+            // KDS só vê: Pendente (Novo) e Preparando
+            const activeOrders = orders.filter(o => o.status === 'pending' || o.status === 'preparing');
+
+            // Ordena: Mais antigos primeiro (FIFO - First In First Out)
+            activeOrders.sort((a, b) => (a.created_at?.toMillis || 0) - (b.created_at?.toMillis || 0));
+
+            if (activeOrders.length === 0) {
+                container.innerHTML = `
+                    <div style='grid-column: 1/-1; text-align: center; padding: 100px 20px; color: var(--secondary-text); opacity: 0.7;'>
+                        <span class="material-icons-round" style="font-size: 6rem; margin-bottom: 20px;">done_all</span>
+                        <div style="font-size: 2rem; font-weight: bold;">Tudo limpo!</div>
+                        <div style="font-size: 1.2rem;">Aguardando novos pedidos...</div>
+                    </div>`;
+                return;
+            }
+
+            activeOrders.forEach(order => {
+                const card = createOrderCard(order);
+                container.appendChild(card);
+            });
+        });
+
+        function createOrderCard(order) {
+            const div = document.createElement('div');
+            div.className = `order-card status-${order.status}`;
+            
+            // Tag se foi editado pelo garçom após envio
+            let modifiedHtml = order.is_modified ? `<div class="modified-tag">⚠️ PEDIDO ALTERADO</div>` : '';
+
+            const date = order.created_at?.toDate ? order.created_at.toDate() : new Date();
+            const timeString = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+            // Lista de Itens
+            let itemsHtml = order.items.map(item => `
+                <div class="item-line">
+                    <div class="item-main">
+                        <span class="item-qty">${item.qty}</span>
+                        <span class="item-name">${item.name}</span>
+                    </div>
+                    ${item.notes ? `<span class="item-note">📝 ${item.notes}</span>` : ''} 
+                </div>
+            `).join('');
+
+            // Botão de Ação (Único clique para finalizar)
+            div.innerHTML = `
+                ${modifiedHtml}
+                <div class="card-header">
+                    <span class="table-num">Mesa ${order.table_number}</span>
+                    <span class="timer">${timeString}</span>
+                </div>
+                <div class="card-body">${itemsHtml}</div>
+                <div class="card-actions">
+                    <button class="btn-ready" onclick="window.updateStatus('${order.id}', 'ready')">
+                        <span class="material-icons-round">check</span> PRONTO
+                    </button>
+                </div>
+            `;
+            return div;
+        }
+
+        // --- AÇÕES ---
+        window.updateStatus = async (id, status) => {
+            try {
+                await api.updateOrderStatus(id, status);
+                showToast();
+            } catch (e) {
+                alert("Erro de conexão: " + e.message);
+            }
+        };
+
+        function showToast() {
+            const t = document.getElementById("toast");
+            t.className = "show success";
+            setTimeout(() => t.className = t.className.replace("show", ""), 2500);
+        }
+        
+        // Relógio
+        setInterval(() => {
+            const now = new Date();
+            document.getElementById('clock').innerText = now.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+        }, 1000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <title>Instalação SaaS</title>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #1a1a1a; color: white; }
+        .box { background: #333; padding: 40px; border-radius: 10px; text-align: center; }
+        input { padding: 10px; margin: 10px 0; width: 100%; box-sizing: border-box; }
+        button { padding: 10px 20px; background: #2e7d32; color: white; border: none; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h1>Criar Super Admin</h1>
+        <p>Defina o acesso mestre do sistema.</p>
+        <input type="email" id="email" placeholder="Seu E-mail">
+        <input type="password" id="pass" placeholder="Sua Senha">
+        <button onclick="createMaster()">CRIAR MASTER</button>
+    </div>
+
+    <script type="module">
+        import { SaasService } from './js/SaasService.js';
+        // Força modo admin para não bloquear a tela
+        const api = new SaasService(null, true);
+
+        window.createMaster = async () => {
+            const email = document.getElementById('email').value;
+            const pass = document.getElementById('pass').value;
+            
+            if(!email || !pass) return alert("Preencha tudo.");
+
+            try {
+                await api.registerSuperAdmin(email, pass);
+                alert("SUCESSO! Você já pode acessar /master/index.html");
+            } catch(e) {
+                alert("Erro: " + e.message);
+            }
+        };
+    </script>
+</body>
+</html>
