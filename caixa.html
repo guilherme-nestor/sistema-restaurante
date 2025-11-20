@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>Caixa / POS - Gestão</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
     <style>
-        /* --- TEMAS (LIGHT / DARK) --- */
+        /* --- TEMAS --- */
         :root { 
             --primary: #D32F2F; 
             --secondary: #2e7d32; 
@@ -19,6 +19,7 @@
             --table-head: #f8f9fa;
             --modal-overlay: rgba(0,0,0,0.7);
             --button-hover-filter: brightness(1.1);
+            --nav-hover: rgba(0,0,0,0.05);
         }
         
         body.dark-mode {
@@ -33,94 +34,228 @@
             --table-head: #252525;
             --modal-overlay: rgba(0,0,0,0.85);
             --button-hover-filter: brightness(1.2);
+            --nav-hover: rgba(255,255,255,0.1);
         }
 
-        * { box-sizing: border-box; transition: background-color 0.3s, color 0.3s, border-color 0.3s; }
-        body { font-family: 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; height: 100vh; overflow: hidden; }
+        * { box-sizing: border-box; transition: background-color 0.3s, color 0.3s; }
         
-        /* Sidebar Lateral */
-        aside { width: 250px; background: var(--sidebar-bg); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px; flex-shrink: 0; }
-        aside h1 { color: var(--primary); font-size: 1.4rem; margin-top: 0; display: flex; align-items: center; gap: 10px; }
+        body { 
+            font-family: 'Segoe UI', sans-serif; 
+            background: var(--bg); 
+            color: var(--text); 
+            margin: 0; 
+            display: flex; 
+            height: 100vh; 
+            overflow: hidden; 
+            width: 100%;
+        }
         
-        .menu-item { padding: 15px; border-radius: 8px; cursor: pointer; margin-bottom: 5px; font-weight: bold; color: var(--text-secondary); transition: 0.2s; display: flex; align-items: center; gap: 10px; }
-        .menu-item:hover { background: rgba(0,0,0,0.05); }
+        /* --- SIDEBAR (Desktop) --- */
+        aside { 
+            width: 260px; 
+            background: var(--sidebar-bg); 
+            border-right: 1px solid var(--border); 
+            display: flex; 
+            flex-direction: column; 
+            padding: 20px; 
+            flex-shrink: 0; 
+            overflow-y: auto;
+            z-index: 100;
+        }
+        
+        aside h1 { 
+            color: var(--primary); 
+            font-size: 1.4rem; 
+            margin-top: 0; 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            margin-bottom: 30px;
+        }
+        
+        /* Container de navegação */
+        .nav-container {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+            flex: 1;
+        }
+        
+        .menu-item { 
+            padding: 12px 15px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            margin-bottom: 5px; 
+            font-weight: bold; 
+            color: var(--text-secondary); 
+            transition: 0.2s; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px; 
+        }
+        .menu-item:hover { background: var(--nav-hover); color: var(--primary); }
         .menu-item.active { background: rgba(211, 47, 47, 0.1); color: var(--primary); }
-        .menu-item .material-icons-round { font-size: 1.2rem; }
+        .menu-item .material-icons-round { font-size: 1.4rem; }
         
-        /* Botão Tema (Sidebar) */
-        .theme-toggle-btn { 
-            background: transparent; border: 1px solid var(--border); color: var(--text); 
-            width: 100%; padding: 10px; border-radius: 8px; cursor: pointer; 
-            margin-bottom: 20px; display: flex; align-items: center; justify-content: center; gap: 8px;
+        /* Botão Tema na Sidebar (Desktop) */
+        .theme-toggle-sidebar { 
+            background: transparent; 
+            border: 1px solid var(--border); 
+            color: var(--text); 
+            width: 100%; 
+            padding: 10px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            margin-bottom: 20px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 8px;
             font-weight: bold;
         }
-        .theme-toggle-btn:hover { background: rgba(0,0,0,0.05); }
+        .theme-toggle-sidebar:hover { background: var(--nav-hover); }
 
-        /* Área Principal */
-        main { flex: 1; padding: 30px; overflow-y: auto; }
+        /* --- ÁREA PRINCIPAL --- */
+        main { 
+            flex: 1; 
+            padding: 30px; 
+            overflow-y: auto; 
+            width: 100%;
+            position: relative;
+            -webkit-overflow-scrolling: touch;
+        }
         
-        .header-content { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; }
-        .kpi-card { background: var(--card-bg); padding: 15px 25px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); display: flex; gap: 15px; align-items: center; margin-top: 10px; border: 1px solid var(--border); }
+        .header-content { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        
+        /* Botão Tema no Header (Mobile) */
+        .theme-toggle-header { 
+            display: none; /* Escondido no desktop */
+            background: transparent; 
+            border: 1px solid var(--border); 
+            color: var(--text); 
+            width: 40px; height: 40px; 
+            border-radius: 50%; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer; 
+        }
+
+        .kpi-card { 
+            background: var(--card-bg); 
+            padding: 15px 25px; 
+            border-radius: 12px; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+            display: flex; 
+            gap: 15px; 
+            align-items: center; 
+            border: 1px solid var(--border); 
+        }
         .kpi-val { font-size: 1.5rem; font-weight: bold; color: var(--secondary); }
 
-        /* Tabela e Responsividade */
-        .table-wrapper { overflow-x: auto; } 
-        table { width: 100%; min-width: 800px; border-collapse: collapse; background: var(--card-bg); border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-        th { background: var(--table-head); text-align: left; padding: 15px; color: var(--text-secondary); font-size: 0.9rem; text-transform: uppercase; border-bottom: 1px solid var(--border); }
-        td { padding: 15px; border-bottom: 1px solid var(--border); vertical-align: middle; color: var(--text); }
+        /* --- TABELA --- */
+        .table-wrapper { 
+            width: 100%;
+            overflow-x: auto; 
+            -webkit-overflow-scrolling: touch;
+            border: 1px solid var(--border); 
+            border-radius: 8px; 
+            background: var(--card-bg);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        table { width: 100%; min-width: 800px; border-collapse: collapse; }
+        
+        th { 
+            background: var(--table-head); 
+            text-align: left; 
+            padding: 15px; 
+            color: var(--text-secondary); 
+            font-size: 0.85rem; 
+            text-transform: uppercase; 
+            border-bottom: 1px solid var(--border); 
+            white-space: nowrap;
+        }
+        
+        td { 
+            padding: 15px; 
+            border-bottom: 1px solid var(--border); 
+            vertical-align: middle; 
+            color: var(--text); 
+            white-space: nowrap;
+        }
         tr:last-child td { border-bottom: none; }
         
-        /* Estilos Específicos de Visão */
-        .badge { padding: 5px 10px; border-radius: 15px; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; }
-        .st-pending { background: rgba(239, 108, 0, 0.2); color: #ef6c00; }
-        .st-preparing { background: rgba(33, 150, 243, 0.2); color: #2196f3; }
-        .st-ready { background: rgba(46, 125, 50, 0.2); color: var(--secondary); }
+        /* BADGES */
+        .badge { padding: 5px 10px; border-radius: 15px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
+        .st-pending { background: rgba(239, 108, 0, 0.15); color: #ef6c00; }
+        .st-preparing { background: rgba(33, 150, 243, 0.15); color: #2196f3; }
+        .st-ready { background: rgba(46, 125, 50, 0.15); color: var(--secondary); }
         .st-cancelled { background: rgba(211, 47, 47, 0.1); color: var(--primary); }
         .st-served { background: #ccc; color: #333; }
         
-        .btn-pay { background: var(--secondary); color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.9rem; transition: 0.2s; }
+        /* BOTÕES */
+        .btn-pay { background: var(--secondary); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.9rem; transition: 0.2s; }
         .btn-pay:hover { filter: var(--button-hover-filter); }
         .btn-pay:disabled { background: #9e9e9e; cursor: not-allowed; }
         
-        .btn-close-table { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; }
+        .btn-close-table { background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.9rem; display: flex; align-items: center; gap: 5px; }
         .btn-close-table:hover { filter: var(--button-hover-filter); }
         
-        .btn-served { background: #607d8b; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 0.9rem; margin-left: 5px; }
+        .btn-served { background: #607d8b; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.9rem; margin-left: 5px; }
         .btn-served:disabled { background: #9e9e9e; cursor: not-allowed; }
 
-        .items-list { font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px; }
+        .items-list { font-size: 0.85rem; color: var(--text-secondary); margin-top: 5px; white-space: normal; }
         .items-list span { background: rgba(0,0,0,0.05); padding: 2px 6px; border-radius: 4px; margin-right: 5px; display: inline-block; margin-bottom: 2px;}
 
         .loading { text-align: center; padding: 40px; color: var(--text-secondary); }
         
-        /* Modal Invoice */
-        .invoice-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--modal-overlay); z-index: 100; display: none; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+        /* MODAL INVOICE */
+        .invoice-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--modal-overlay); z-index: 2000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(2px); padding: 20px; box-sizing: border-box; }
         .invoice-modal-overlay.open { display: flex; }
-        .modal-content { background: var(--card-bg); width: 450px; max-width: 90%; border-radius: 12px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); color: var(--text); border: 1px solid var(--border); animation: slideIn 0.2s ease-out; }
+        .modal-content { background: var(--card-bg); width: 100%; max-width: 450px; border-radius: 15px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); color: var(--text); border: 1px solid var(--border); animation: slideIn 0.2s ease-out; max-height: 90vh; overflow-y: auto; }
         @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
         .invoice-item-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed var(--border); font-size: 1rem; }
-        .invoice-item-row:last-of-type { border-bottom: none; }
         .invoice-subtotal-row { padding-top: 10px; font-weight: 500; font-size: 1.1rem; }
         .invoice-tax-row { font-size: 0.9rem; color: var(--text-secondary); }
         .invoice-total-row { padding-top: 15px; border-top: 2px solid var(--border); margin-top: 15px; font-size: 1.6rem; font-weight: bold; color: var(--secondary); }
         
         .invoice-actions { margin-top: 20px; display: flex; flex-direction: column; gap: 10px; }
-        .invoice-actions button { padding: 12px; font-size: 1.1rem; width: 100%; }
+        .invoice-actions button { padding: 12px; font-size: 1.1rem; width: 100%; border-radius: 8px; }
         
         .btn-modal-back { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
-        .btn-modal-back:hover { filter: brightness(0.9); }
         
-        @media (max-width: 768px) {
+        /* --- MOBILE --- */
+        @media (max-width: 900px) {
             body { flex-direction: column; overflow-y: auto; }
-            aside { width: 100%; height: auto; padding: 10px 20px; border-right: none; border-bottom: 1px solid var(--border); flex-direction: row; align-items: center; justify-content: space-between;}
-            aside h1 { font-size: 1.2rem; }
-            .theme-toggle-btn { width: auto; margin-bottom: 0; padding: 8px; }
-            .theme-toggle-btn span:last-child { display: none; } /* Esconde texto do botão no mobile */
-            main { padding: 15px; }
-            .header-content { flex-direction: row; }
-            .kpi-card { width: 100%; margin-top: 15px; }
-            .menu-label { display: none; }
+            
+            /* Sidebar vira Bottom Nav */
+            aside { 
+                width: 100%; height: 65px; position: fixed; bottom: 0; left: 0; 
+                border-right: none; border-top: 1px solid var(--border); padding: 0; 
+                flex-direction: row; justify-content: center; background: var(--sidebar-bg);
+                box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 999;
+            }
+            aside h1, .theme-toggle-sidebar { display: none; } /* Esconde elementos desktop */
+
+            .nav-container { flex-direction: row; width: 100%; justify-content: space-around; align-items: center; gap: 0; }
+            
+            .menu-item { 
+                flex-direction: column; gap: 4px; padding: 8px 0; font-size: 0.7rem; 
+                border-radius: 0; flex: 1; justify-content: center; margin-bottom: 0; height: 100%; 
+            }
+            .menu-item .material-icons-round { font-size: 1.6rem; }
+            
+            /* Main */
+            main { padding: 15px; padding-bottom: 100px; width: 100%; overflow-x: hidden; }
+            
+            .header-content { margin-bottom: 20px; }
+            h2 { margin: 0; font-size: 1.5rem; }
+            
+            /* Mostra botão de tema no header */
+            .theme-toggle-header { display: flex; }
+            
+            .kpi-card { width: 100%; margin-top: 10px; justify-content: space-between; }
         }
     </style>
 </head>
@@ -129,29 +264,32 @@
     <aside>
         <h1><span class="material-icons-round">point_of_sale</span> Caixa PDV</h1>
         
-        <button class="theme-toggle-btn" onclick="toggleTheme()">
-            <span class="material-icons-round" id="theme-icon">dark_mode</span>
+        <button class="theme-toggle-sidebar" onclick="toggleTheme()">
+            <span class="material-icons-round" id="theme-icon-side">dark_mode</span>
             <span>Modo Escuro</span>
         </button>
         
-        <div class="menu-label" style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 10px; margin-bottom: 10px;">OPERACIONAL</div>
-        
-        <div class="menu-item active" onclick="trocarVisao('mesas')" id="nav-mesas">
-            <span class="material-icons-round">table_restaurant</span> Contas por Mesa
-        </div>
-        <div class="menu-item" onclick="trocarVisao('pedidos')" id="nav-pedidos">
-            <span class="material-icons-round">receipt_long</span> Pedidos Detalhados
-        </div>
-        
-        <!-- Link para Admin (Configurações) -->
-        <div class="menu-item" style="margin-top: auto;" onclick="window.open('admin.html' + window.location.search, '_blank')">
-            <span class="material-icons-round">settings</span> Configurações
+        <div class="nav-container">
+            <div class="menu-item active" onclick="trocarVisao('mesas')" id="nav-mesas">
+                <span class="material-icons-round">table_restaurant</span> Contas
+            </div>
+            <div class="menu-item" onclick="trocarVisao('pedidos')" id="nav-pedidos">
+                <span class="material-icons-round">receipt_long</span> Pedidos
+            </div>
         </div>
     </aside>
 
     <main>
         <div class="header-content">
-            <h2 id="page-title" style="margin: 0; color: var(--primary);">Contas por Mesa</h2>
+            <div style="display: flex; align-items: center; gap: 15px; width: 100%; justify-content: space-between;">
+                <h2 id="page-title" style="margin: 0; color: var(--primary);">Contas por Mesa</h2>
+                
+                <!-- Botão de Tema Mobile -->
+                <button class="theme-toggle-header" onclick="toggleTheme()">
+                    <span class="material-icons-round" id="theme-icon-header">dark_mode</span>
+                </button>
+            </div>
+
             <div class="kpi-card">
                 <span style="color: var(--text-secondary);">Total Pendente:</span>
                 <span class="kpi-val" id="total-pending">R$ 0,00</span>
@@ -163,10 +301,10 @@
         </div>
     </main>
     
-    <!-- MODAL DE INVOICE (Fechamento de Conta) -->
+    <!-- MODAL DE INVOICE -->
     <div class="invoice-modal-overlay" id="invoice-modal">
         <div class="modal-content">
-            <h2 id="invoice-title" style="text-align: center; color: var(--primary); margin-top: 0;">Comanda da Mesa X</h2>
+            <h2 id="invoice-title" style="text-align: center; color: var(--primary); margin-top: 0;">Comanda</h2>
             <div id="invoice-content-area"></div>
             <div class="invoice-actions">
                 <button id="btn-final-pay" class="btn-pay">CONFIRMAR PAGAMENTO</button>
@@ -177,26 +315,34 @@
 
     <script type="module">
         import { SaasService } from './js/SaasService.js';
+        
+        // Inicializa sem ID, pega da URL
         const api = new SaasService(); 
 
         // LÓGICA DE TEMA (DARK/LIGHT)
         window.toggleTheme = () => {
             const body = document.body;
-            const icon = document.getElementById('theme-icon');
+            const iconSide = document.getElementById('theme-icon-side');
+            const iconHead = document.getElementById('theme-icon-header');
+            
             if (body.classList.contains('dark-mode')) {
                 body.classList.remove('dark-mode');
-                icon.innerText = 'dark_mode';
+                if(iconSide) iconSide.innerText = 'dark_mode';
+                if(iconHead) iconHead.innerText = 'dark_mode';
                 localStorage.setItem('pos_theme', 'light');
             } else {
                 body.classList.add('dark-mode');
-                icon.innerText = 'light_mode';
+                if(iconSide) iconSide.innerText = 'light_mode';
+                if(iconHead) iconHead.innerText = 'light_mode';
                 localStorage.setItem('pos_theme', 'dark');
             }
         };
+        
         // Carrega tema salvo
         if (localStorage.getItem('pos_theme') === 'dark') {
             document.body.classList.add('dark-mode');
-            document.getElementById('theme-icon').innerText = 'light_mode';
+            if(document.getElementById('theme-icon-side')) document.getElementById('theme-icon-side').innerText = 'light_mode';
+            if(document.getElementById('theme-icon-header')) document.getElementById('theme-icon-header').innerText = 'light_mode';
         }
 
         const container = document.getElementById('table-container');
@@ -209,14 +355,13 @@
 
         // INICIALIZAÇÃO
         (async () => {
+            // Verifica segurança (Funcionário ou Dono)
+            api.requireAuth(null, ['owner', 'employee']);
+            
             try {
                 const config = await api.getRestaurantConfig();
                 SERVICE_FEE_PERCENTAGE = config.serviceFeePercentage / 100;
-                console.log(`Taxa de Serviço carregada: ${SERVICE_FEE_PERCENTAGE * 100}%`);
-            } catch (e) {
-                console.error("Falha ao carregar taxa. Usando 0%.", e);
-                SERVICE_FEE_PERCENTAGE = 0;
-            }
+            } catch (e) { SERVICE_FEE_PERCENTAGE = 0; }
             
             api.listenToOrders((orders) => {
                 currentOrders = orders;
@@ -226,9 +371,7 @@
         
         window.closeModal = (id) => document.getElementById(id).classList.remove('open');
 
-        // RENDERIZAÇÃO PRINCIPAL
         window.render = () => {
-            // Calcula KPI (apenas pedidos ativos, não cancelados)
             const activeOrdersForKPI = currentOrders.filter(o => o.status !== 'cancelled');
             const totalGeral = activeOrdersForKPI.reduce((acc, order) => order.total_amount ? acc + order.total_amount : acc, 0);
             totalDisplay.innerText = `R$ ${totalGeral.toFixed(2)}`;
@@ -238,49 +381,32 @@
                 return;
             }
 
-            if (currentView === 'mesas') {
-                renderViewMesas(currentOrders);
-            } else {
-                renderViewPedidos(currentOrders);
-            }
+            if (currentView === 'mesas') renderViewMesas(currentOrders);
+            else renderViewPedidos(currentOrders);
         };
 
-        // VIEW 1: MESAS
         function renderViewMesas(orders) {
             document.getElementById('page-title').innerText = "Contas por Mesa";
             const mesas = {};
             
             orders.forEach(order => {
-                if(order.status === 'cancelled') return; // Ignora cancelados no fechamento de mesa
-
+                if(order.status === 'cancelled') return; 
                 const numMesa = order.table_number;
-                if (!mesas[numMesa]) {
-                    mesas[numMesa] = { numero: numMesa, total: 0, ids: [], itens: [], lastTime: null };
-                }
+                if (!mesas[numMesa]) mesas[numMesa] = { numero: numMesa, total: 0, ids: [], itens: [], lastTime: null };
+                
                 mesas[numMesa].total += order.total_amount;
                 mesas[numMesa].ids.push(order.id);
                 if (order.items) mesas[numMesa].itens.push(...order.items);
                 
                 const orderDate = order.created_at?.toDate ? order.created_at.toDate() : new Date();
-                if (!mesas[numMesa].lastTime || orderDate > mesas[numMesa].lastTime) {
-                    mesas[numMesa].lastTime = orderDate;
-                }
+                if (!mesas[numMesa].lastTime || orderDate > mesas[numMesa].lastTime) mesas[numMesa].lastTime = orderDate;
             });
             window.mesasCache = mesas; 
 
-            let html = `
-                <table>
-                    <thead>
-                        <tr><th>Mesa</th><th>Consumo Agrupado</th><th>Última Movimentação</th><th>Total da Conta</th><th>Ação</th></tr>
-                    </thead>
-                    <tbody>
-            `;
+            let html = `<table><thead><tr><th>Mesa</th><th>Resumo</th><th>Hora</th><th>Total</th><th>Ação</th></tr></thead><tbody>`;
             const listaMesas = Object.values(mesas).sort((a, b) => a.numero - b.numero);
             
-            if (listaMesas.length === 0) { 
-                container.innerHTML = "<p class='loading'>Nenhuma conta ativa para fechar.</p>"; 
-                return; 
-            }
+            if (listaMesas.length === 0) { container.innerHTML = "<p class='loading'>Nenhuma conta ativa.</p>"; return; }
 
             listaMesas.forEach(mesa => {
                 const hora = mesa.lastTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
@@ -288,88 +414,57 @@
 
                 html += `
                     <tr>
-                        <td style="font-weight:bold; font-size:1.2rem; color:var(--primary);">Mesa ${mesa.numero}</td>
-                        <td><div style="font-weight:bold; margin-bottom:4px;">${mesa.ids.length} pedido(s)</div><div class="items-list">${itensHtml}</div></td>
+                        <td style="font-weight:bold; font-size:1.2rem; color:var(--primary);">#${mesa.numero}</td>
+                        <td><div style="font-weight:bold;">${mesa.ids.length} pedidos</div><div class="items-list">${itensHtml}</div></td>
                         <td>${hora}</td>
-                        <td style="font-weight:bold; font-size:1.1rem;">R$ ${mesa.total.toFixed(2)}</td>
-                        <td><button class="btn-close-table" onclick="openInvoiceDetail(${mesa.numero})"><span class="material-icons-round" style="font-size:1rem;">payments</span> Fechar Conta</button></td>
+                        <td style="font-weight:bold;">R$ ${mesa.total.toFixed(2)}</td>
+                        <td><button class="btn-close-table" onclick="openInvoiceDetail(${mesa.numero})">Fechar</button></td>
                     </tr>`;
             });
             html += `</tbody></table>`;
             container.innerHTML = html;
         }
 
-        // VIEW 2: PEDIDOS DETALHADOS
         function renderViewPedidos(orders) {
-            document.getElementById('page-title').innerText = "Todos os Pedidos (Detalhado)";
-            let html = `
-            <div class="table-wrapper">
-                <table>
-                    <thead><tr><th>Mesa</th><th>Status</th><th>Hora</th><th>Itens</th><th>Valor</th><th>Ação</th></tr></thead>
-                    <tbody>`;
+            document.getElementById('page-title').innerText = "Pedidos Detalhados";
+            let html = `<table><thead><tr><th>Mesa</th><th>Status</th><th>Hora</th><th>Itens</th><th>Valor</th><th>Ação</th></tr></thead><tbody>`;
             
-            // Ordena mais novos primeiro
             orders.sort((a, b) => (b.created_at?.seconds || 0) - (a.created_at?.seconds || 0));
 
             orders.forEach(order => {
                 const date = order.created_at?.toDate ? order.created_at.toDate() : new Date();
                 const hora = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                
-                let statusClass = 'st-pending'; 
-                let statusLabel = 'Novo'; 
-                let actionEnabled = true;
+                let statusClass = 'st-pending'; let statusLabel = 'Novo'; let actionEnabled = true;
 
-                if(order.status === 'preparing') { statusClass = 'st-preparing'; statusLabel = 'Na Cozinha'; }
-                else if(order.status === 'ready') { statusClass = 'st-ready'; statusLabel = 'Pronto p/ Servir'; }
+                if(order.status === 'preparing') { statusClass = 'st-preparing'; statusLabel = 'Cozinha'; }
+                else if(order.status === 'ready') { statusClass = 'st-ready'; statusLabel = 'Pronto'; }
                 else if(order.status === 'served') { statusClass = 'st-served'; statusLabel = 'Servido'; }
-                else if(order.status === 'cancelled') { statusClass = 'st-cancelled'; statusLabel = 'CANCELADO'; actionEnabled = false; }
+                else if(order.status === 'cancelled') { statusClass = 'st-cancelled'; statusLabel = 'Cancelado'; actionEnabled = false; }
 
                 const itensResumo = order.items.map(i => `${i.qty}x ${i.name}`).join(', ');
                 
-                // Botão de ação condicional
-                let actionButton = `<button class="btn-pay" onclick="pagarPedidoUnico('${order.id}', ${order.table_number})" ${actionEnabled ? '' : 'disabled'}>Baixar Item</button>`;
-                
-                // Se estiver pronto, mostra opção de "Servido"
-                if (order.status === 'ready') {
-                    actionButton += `<button class="btn-served" onclick="marcarServido('${order.id}', ${order.table_number})" ${actionEnabled ? '' : 'disabled'}>Servido</button>`;
-                }
+                let actionButton = `<button class="btn-pay" onclick="pagarPedidoUnico('${order.id}', ${order.table_number})" ${actionEnabled ? '' : 'disabled'}>Baixar</button>`;
+                if (order.status === 'ready') actionButton += `<button class="btn-served" onclick="marcarServido('${order.id}', ${order.table_number})" ${actionEnabled ? '' : 'disabled'}>Servir</button>`;
 
-                html += `
-                    <tr>
-                        <td style="font-weight:bold;">#${order.table_number}</td>
-                        <td><span class="badge ${statusClass}">${statusLabel}</span></td>
-                        <td>${hora}</td>
-                        <td style="color:var(--text-secondary);">${itensResumo}</td>
-                        <td>R$ ${order.total_amount.toFixed(2)}</td>
-                        <td>${actionButton}</td>
-                    </tr>`;
+                html += `<tr><td>#${order.table_number}</td><td><span class="badge ${statusClass}">${statusLabel}</span></td><td>${hora}</td><td style="color:var(--text-secondary); white-space:normal;">${itensResumo}</td><td>R$ ${order.total_amount.toFixed(2)}</td><td>${actionButton}</td></tr>`;
             });
-            html += `</tbody></table></div>`;
+            html += `</tbody></table>`;
             container.innerHTML = html;
         }
 
-        // ABERTURA DO MODAL DE PAGAMENTO (INVOICE)
         window.openInvoiceDetail = (mesaNumero) => {
             const mesaData = window.mesasCache[mesaNumero];
             if (!mesaData) return;
-
             const consolidated = {};
             let subtotalConta = 0;
             
-            // Consolida itens iguais para a nota fiscal
             mesaData.itens.forEach(item => {
                 const key = `${item.name}-${item.notes || ''}`; 
                 subtotalConta += item.price * item.qty;
-
-                if (!consolidated[key]) {
-                    consolidated[key] = {
-                        name: item.name, price: item.price, qty: 0, notes: item.notes,
-                    };
-                }
+                if (!consolidated[key]) consolidated[key] = { name: item.name, price: item.price, qty: 0, notes: item.notes };
                 consolidated[key].qty += item.qty;
             });
             
-            // Calcula totais com a taxa carregada do banco
             const taxaServicoRaw = subtotalConta * SERVICE_FEE_PERCENTAGE;
             const totalGeral = subtotalConta + taxaServicoRaw;
             const feePercentageDisplay = (SERVICE_FEE_PERCENTAGE * 100).toFixed(0);
@@ -377,85 +472,44 @@
             let htmlItems = '';
             Object.values(consolidated).forEach(item => {
                 const subtotal = item.price * item.qty;
-                const obs = item.notes ? ` <small style="opacity:0.7">(${item.notes})</small>` : '';
-                htmlItems += `
-                    <div class="invoice-item-row">
-                        <span>${item.qty}x ${item.name} ${obs}</span>
-                        <span>R$ ${subtotal.toFixed(2)}</span>
-                    </div>
-                `;
+                const obs = item.notes ? ` <small>(${item.notes})</small>` : '';
+                htmlItems += `<div class="invoice-item-row"><span>${item.qty}x ${item.name} ${obs}</span><span>R$ ${subtotal.toFixed(2)}</span></div>`;
             });
             
             let taxaHtml = '';
             if (SERVICE_FEE_PERCENTAGE > 0) {
-                taxaHtml = `
-                    <div class="invoice-tax-row">
-                        <span>Taxa de Serviço (${feePercentageDisplay}%):</span>
-                        <span>R$ ${taxaServicoRaw.toFixed(2)}</span>
-                    </div>
-                `;
+                taxaHtml = `<div class="invoice-tax-row"><span>Taxa (${feePercentageDisplay}%):</span><span>R$ ${taxaServicoRaw.toFixed(2)}</span></div>`;
             }
 
             document.getElementById('invoice-content-area').innerHTML = `
                 <div style="margin-bottom: 20px;">${htmlItems}</div>
-                <div class="invoice-subtotal-row">
-                    <span>Subtotal:</span>
-                    <span>R$ ${subtotalConta.toFixed(2)}</span>
-                </div>
+                <div class="invoice-subtotal-row"><span>Subtotal:</span><span>R$ ${subtotalConta.toFixed(2)}</span></div>
                 ${taxaHtml}
-                <div class="invoice-total-row">
-                    <span>TOTAL A PAGAR:</span>
-                    <span>R$ ${totalGeral.toFixed(2)}</span>
-                </div>
-                <small style="font-size: 0.8rem; color: var(--text-secondary); display: block; margin-top: 10px;">Fechando a conta, ${mesaData.ids.length} pedido(s) serão baixados.</small>
+                <div class="invoice-total-row"><span>TOTAL:</span><span>R$ ${totalGeral.toFixed(2)}</span></div>
             `;
-
-            document.getElementById('invoice-title').innerText = `Comanda Mesa ${mesaNumero}`;
+            document.getElementById('invoice-title').innerText = `Mesa ${mesaNumero}`;
             
-            // Configura botão de confirmar
             const btnPay = document.getElementById('btn-final-pay');
-            btnPay.innerText = `CONFIRMAR PAGAMENTO (R$ ${totalGeral.toFixed(2)})`;
-            btnPay.onclick = null; // Limpa evento anterior
+            btnPay.innerText = `CONFIRMAR (R$ ${totalGeral.toFixed(2)})`;
+            btnPay.onclick = null; 
             btnPay.onclick = () => fecharContaMesa(mesaNumero, totalGeral, mesaData.ids); 
-
             document.getElementById('invoice-modal').classList.add('open');
         };
 
-        // AÇÕES DE BANCO DE DADOS
         window.fecharContaMesa = async (numeroMesa, totalAPagar, pedidoIds) => {
             const btn = document.getElementById('btn-final-pay');
-            btn.innerText = "Processando...";
-            btn.disabled = true;
-
+            btn.innerText = "..."; btn.disabled = true;
             try {
                 const promessas = pedidoIds.map(id => api.updateOrderStatus(id, 'paid'));
                 await Promise.all(promessas);
-                
-                alert(`Pagamento de R$ ${totalAPagar.toFixed(2)} recebido para Mesa ${numeroMesa}!`);
                 closeModal('invoice-modal');
-
-            } catch (e) { 
-                console.error(e); 
-                alert("Erro ao fechar a conta. Verifique o console."); 
-            } finally {
-                btn.innerText = `CONFIRMAR PAGAMENTO (R$ ${totalAPagar.toFixed(2)})`;
-                btn.disabled = false;
-            }
+            } catch (e) { alert("Erro."); } 
+            finally { btn.innerText = "CONFIRMAR"; btn.disabled = false; }
         };
 
-        window.pagarPedidoUnico = async (id, mesa) => {
-            if(confirm(`Baixar apenas o pedido individual da Mesa ${mesa}?`)) {
-                await api.updateOrderStatus(id, 'paid');
-            }
-        };
+        window.pagarPedidoUnico = async (id, mesa) => { if(confirm(`Baixar pedido da Mesa ${mesa}?`)) await api.updateOrderStatus(id, 'paid'); };
+        window.marcarServido = async (id, mesa) => { if(confirm(`Marcar como servido?`)) await api.updateOrderStatus(id, 'served'); };
 
-        window.marcarServido = async (id, mesa) => {
-            if(confirm(`Marcar pedido da Mesa ${mesa} como servido?`)) {
-                await api.updateOrderStatus(id, 'served');
-            }
-        };
-
-        // NAVEGAÇÃO
         window.trocarVisao = (novaVisao) => {
             currentView = novaVisao;
             document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));

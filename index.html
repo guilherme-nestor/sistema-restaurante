@@ -52,7 +52,7 @@
             display: flex; 
             height: 100vh; 
             overflow: hidden; 
-            width: 100%; /* Mudança de 100vw para 100% para evitar scroll horizontal global */
+            width: 100%;
         }
 
         /* --- SIDEBAR (Desktop) --- */
@@ -122,7 +122,6 @@
             padding: 30px; 
             width: 100%; 
             position: relative;
-            /* Importante para mobile: */
             -webkit-overflow-scrolling: touch; 
         }
 
@@ -164,15 +163,9 @@
         .filter-bar { display: flex; justify-content: flex-end; margin-bottom: 20px; }
         select { padding: 8px; border-radius: 6px; border: 1px solid var(--border); background: var(--input-bg); color: var(--text); }
 
-        /* --- GERENCIAMENTO (GRID RESPONSIVO) --- */
-        .manage-grid { 
-            display: grid; 
-            grid-template-columns: 300px 1fr; 
-            gap: 25px; 
-            width: 100%;
-        }
+        /* --- GERENCIAMENTO --- */
+        .manage-grid { display: grid; grid-template-columns: 300px 1fr; gap: 25px; }
         
-        /* CARD GENÉRICO (Config, Categoria, Novo Func, etc) */
         .section-card { 
             background: var(--card-bg); 
             padding: 25px; 
@@ -181,16 +174,16 @@
             border: 1px solid var(--border); 
             margin-bottom: 20px; 
             width: 100%;
-            /* CRÍTICO: Garante que o padding não estoure a largura */
-            box-sizing: border-box; 
-            overflow: hidden; /* Impede vazamento de conteúdo */
+            max-width: 100%; 
+            box-sizing: border-box;
+            /* CORREÇÃO PARA MOBILE: Permite que o card encolha se necessário */
+            min-width: 0;
         }
         h2 { margin-top: 0; border-bottom: 2px solid var(--primary); padding-bottom: 10px; font-size: 1.2rem; color: var(--primary); margin-bottom: 20px; }
 
         .form-group { margin-bottom: 15px; width: 100%; }
         label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; color: var(--text-light); }
         
-        /* Inputs Responsivos que não vazam */
         input, select { 
             width: 100%; 
             max-width: 100%;
@@ -200,7 +193,7 @@
             background: var(--input-bg); 
             color: var(--text); 
             font-size: 1rem; 
-            box-sizing: border-box; /* Inclui padding na conta da largura */
+            box-sizing: border-box; 
         }
         input:focus { outline: none; border-color: var(--primary); }
 
@@ -209,11 +202,11 @@
         .btn-primary:hover { background: #1b5e20; }
         .btn-add { background: var(--primary); color: white; margin-bottom: 15px; width: 100%; display: flex; align-items: center; justify-content: center; gap: 5px;}
         
-        /* --- TABELA COM SCROLL HORIZONTAL INTELIGENTE --- */
+        /* Tabela (FIX PARA ROLAGEM APENAS DENTRO DA TABELA) */
         .table-container { 
             width: 100%;
-            max-width: 100%;
-            /* Ativa o scroll horizontal APENAS aqui se necessário */
+            /* Importante: max-width 100% do pai, não da tela */
+            max-width: 100%; 
             overflow-x: auto; 
             -webkit-overflow-scrolling: touch; 
             border: 1px solid var(--border); 
@@ -225,8 +218,7 @@
         table { 
             width: 100%; 
             border-collapse: collapse; 
-            /* Largura mínima: Se a tela for menor que isso, o scroll ativa */
-            min-width: 600px; 
+            min-width: 600px; /* Força a largura para ativar o scroll horizontal */
         }
         
         th { 
@@ -236,7 +228,7 @@
             font-size: 0.85rem; 
             color: var(--text-light); 
             text-transform: uppercase; 
-            white-space: nowrap; /* Impede quebra de linha no cabeçalho */
+            white-space: nowrap; 
         }
         
         td { 
@@ -245,7 +237,7 @@
             color: var(--text); 
             font-size: 0.95rem; 
             vertical-align: middle;
-            white-space: nowrap; /* Impede quebra de linha no conteúdo */
+            white-space: nowrap; 
         }
         
         .action-btns { display: flex; gap: 5px; justify-content: flex-end; }
@@ -257,12 +249,10 @@
         .modal-overlay.open { display: flex; }
         .modal-content { background: var(--card-bg); padding: 30px; border-radius: 15px; width: 100%; max-width: 500px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); border: 1px solid var(--border); max-height: 90vh; overflow-y: auto; }
 
-        /* --- MOBILE / TABLET --- */
+        /* Mobile */
         @media (max-width: 900px) {
-            /* Layout vertical */
-            body { flex-direction: column; overflow-y: auto; height: auto; min-height: 100vh; }
+            body { flex-direction: column; overflow-y: auto; }
             
-            /* Barra Inferior Fixa */
             aside { 
                 width: 100%; height: 65px; position: fixed; bottom: 0; left: 0; 
                 border-right: none; border-top: 1px solid var(--border); padding: 0; 
@@ -275,34 +265,33 @@
             .menu-item .material-icons-round { font-size: 1.6rem; }
             .menu-item span:not(.material-icons-round) { display: block; } 
 
-            /* Oculta elementos desktop da barra */
             .brand, .menu-label, .user-info { display: none; }
             .mobile-logout { display: flex; }
             .mobile-user-info { display: block; }
 
-            /* Área principal segura */
             main { 
                 padding: 15px; 
                 padding-bottom: 100px; 
                 width: 100%;
-                max-width: 100%;
-                overflow-x: hidden;
+                max-width: 100vw; /* Garante limite da viewport */
+                overflow-x: hidden; /* Esconde o que vazar do main */
             }
             
-            /* Força 1 coluna em tudo */
-            .manage-grid, .chart-grid, .kpi-grid { grid-template-columns: 1fr !important; gap: 15px; }
+            /* Grid de 1 coluna */
+            .manage-grid, .chart-grid { grid-template-columns: 1fr !important; }
             
             .chart-card { height: 300px; }
             header { margin-bottom: 20px; }
             h1 { font-size: 1.5rem; }
             
-            /* Ajuste crítico: Paddings menores nos cards para ganhar espaço */
-            .section-card { padding: 20px; width: 100%; }
+            /* Ajuste dos cards no mobile */
+            .section-card { 
+                padding: 20px; 
+                width: 100%; 
+                min-width: 0; /* Permite encolher se necessário */
+            }
             
-            /* Garante que modais não estourem */
             .modal-content { width: 100%; margin: 0; }
-            
-            /* Formulários ocupam 100% da largura disponível */
             .form-group input, .form-group select { width: 100%; min-width: 0; }
         }
     </style>
@@ -316,14 +305,15 @@
 
         <div class="nav-links-container">
             <div class="menu-label">Gestão</div>
-            <a class="menu-item active" onclick="switchTab('dashboard')" id="nav-dash">
-                <span class="material-icons-round">analytics</span> <span>Dashboard</span>
-            </a>
-            <a class="menu-item" onclick="switchTab('management')" id="nav-mgmt">
+            
+            <a class="menu-item active" onclick="switchTab('management')" id="nav-mgmt">
                 <span class="material-icons-round">inventory</span> <span>Cardápio</span>
             </a>
             <a class="menu-item" onclick="switchTab('team')" id="nav-team">
                 <span class="material-icons-round">group</span> <span>Equipe</span>
+            </a>
+            <a class="menu-item" onclick="switchTab('dashboard')" id="nav-dash">
+                <span class="material-icons-round">analytics</span> <span>Dashboard</span>
             </a>
 
             <div class="menu-label">Acesso Rápido</div>
@@ -365,8 +355,108 @@
             Logado como: <strong id="user-email-display-mobile">...</strong>
         </div>
 
-        <!-- === VIEW 1: DASHBOARD === -->
-        <div id="view-dashboard" class="view-container active">
+        <!-- === VIEW 1: GERENCIAMENTO === -->
+        <div id="view-management" class="view-container active">
+            <div class="manage-grid">
+                <div>
+                    <div class="section-card">
+                        <h2>⚙️ Taxa de Serviço</h2>
+                        <div class="form-group">
+                            <label>Porcentagem (%)</label>
+                            <input type="number" id="input-service-fee" placeholder="0" min="0" max="100">
+                        </div>
+                        <button class="btn-primary" id="btn-save-configs">Salvar Taxa</button>
+                    </div>
+
+                    <div class="section-card">
+                        <h2>🏷️ Categorias</h2>
+                        <form id="category-form" style="display: flex; gap: 5px; margin-bottom: 15px;">
+                            <input type="text" id="cat-name" placeholder="Nova Categoria" required>
+                            <button type="submit" class="btn-primary" style="width: auto;">+</button>
+                        </form>
+                        <div id="category-list"></div>
+                    </div>
+                </div>
+
+                <div class="section-card">
+                    <h2>🍔 Cardápio</h2>
+                    <!-- BARRA DE BUSCA -->
+                    <div style="margin-bottom: 20px;">
+                        <input type="text" id="menu-search" placeholder="Buscar item..." oninput="window.filterMenu()" style="width: 100%;">
+                    </div>
+
+                    <button class="btn-add" onclick="openProductModal()">
+                        <span class="material-icons-round">add</span> Novo Produto
+                    </button>
+                    
+                    <!-- TABELA COM SCROLL -->
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>Preço</th>
+                                    <th>Categoria</th>
+                                    <th>Status</th>
+                                    <th style="text-align: right;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="products-tbody">
+                                <tr><td colspan="5" style="text-align:center; padding: 20px; color: var(--text-light);">Carregando...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- === VIEW 2: EQUIPE === -->
+        <div id="view-team" class="view-container">
+            <div class="manage-grid">
+                <div>
+                    <div class="section-card">
+                        <h2>Novo Funcionário</h2>
+                        <form id="create-employee-form">
+                            <div class="form-group">
+                                <label>Nome</label>
+                                <input type="text" id="emp-name" placeholder="Ex: João" required>
+                            </div>
+                            <div class="form-group">
+                                <label>E-mail de Acesso</label>
+                                <input type="email" id="emp-email" placeholder="email@exemplo.com" required>
+                            </div>
+                            <div class="form-group">
+                                <label>Senha</label>
+                                <input type="text" id="emp-pass" placeholder="Min 6 caracteres" required minlength="6">
+                            </div>
+                            <button type="submit" class="btn-primary">Cadastrar</button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="section-card">
+                    <h2>Lista de Funcionários</h2>
+                    <!-- TABELA COM SCROLL -->
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>E-mail</th>
+                                    <th style="text-align: right;">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody id="employees-tbody">
+                                <tr><td colspan="3" style="text-align:center; padding:20px; color:var(--text-light);">Carregando...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- === VIEW 3: DASHBOARD === -->
+        <div id="view-dashboard" class="view-container">
             <div class="filter-bar">
                 <select id="dashboard-period" onchange="loadDashboard()">
                     <option value="30">Últimos 30 Dias</option>
@@ -396,100 +486,6 @@
             </div>
         </div>
 
-        <!-- === VIEW 2: GERENCIAMENTO === -->
-        <div id="view-management" class="view-container">
-            <div class="manage-grid">
-                <div>
-                    <div class="section-card">
-                        <h2>⚙️ Taxa de Serviço</h2>
-                        <div class="form-group">
-                            <label>Porcentagem (%)</label>
-                            <input type="number" id="input-service-fee" placeholder="0" min="0" max="100">
-                        </div>
-                        <button class="btn-primary" id="btn-save-configs">Salvar Taxa</button>
-                    </div>
-
-                    <div class="section-card">
-                        <h2>🏷️ Categorias</h2>
-                        <form id="category-form" style="display: flex; gap: 5px; margin-bottom: 15px;">
-                            <input type="text" id="cat-name" placeholder="Nova Categoria" required>
-                            <button type="submit" class="btn-primary" style="width: auto;">+</button>
-                        </form>
-                        <div id="category-list"></div>
-                    </div>
-                </div>
-
-                <div class="section-card">
-                    <h2>🍔 Cardápio</h2>
-                    <button class="btn-add" onclick="openProductModal()">
-                        <span class="material-icons-round">add</span> Novo Produto
-                    </button>
-                    
-                    <!-- TABELA COM SCROLL HORIZONTAL AUTOMÁTICO -->
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Nome</th>
-                                    <th>Preço</th>
-                                    <th>Categoria</th>
-                                    <th>Status</th>
-                                    <th style="text-align: right;">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="products-tbody">
-                                <tr><td colspan="5" style="text-align:center; padding: 20px; color: var(--text-light);">Carregando...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- === VIEW 3: EQUIPE === -->
-        <div id="view-team" class="view-container">
-            <div class="manage-grid">
-                <div>
-                    <div class="section-card">
-                        <h2>Novo Funcionário</h2>
-                        <form id="create-employee-form">
-                            <div class="form-group">
-                                <label>Nome</label>
-                                <input type="text" id="emp-name" placeholder="Ex: João" required>
-                            </div>
-                            <div class="form-group">
-                                <label>E-mail de Acesso</label>
-                                <input type="email" id="emp-email" placeholder="email@exemplo.com" required>
-                            </div>
-                            <div class="form-group">
-                                <label>Senha</label>
-                                <input type="text" id="emp-pass" placeholder="Min 6 caracteres" required minlength="6">
-                            </div>
-                            <button type="submit" class="btn-primary">Cadastrar</button>
-                        </form>
-                    </div>
-                </div>
-
-                <div class="section-card">
-                    <h2>Lista de Funcionários</h2>
-                    <!-- TABELA COM SCROLL HORIZONTAL AUTOMÁTICO -->
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Nome</th>
-                                    <th>E-mail</th>
-                                    <th style="text-align: right;">Ações</th>
-                                </tr>
-                            </thead>
-                            <tbody id="employees-tbody">
-                                <tr><td colspan="3" style="text-align:center; padding:20px; color:var(--text-light);">Carregando...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
     </main>
 
     <!-- MODAL PRODUTO -->
@@ -611,7 +607,7 @@
             
             loadCategories();
             loadProducts();
-            loadDashboard();
+            // Dashboard não carrega automaticamente
 
             document.getElementById('btn-save-configs').onclick = async () => {
                 const fee = parseInt(document.getElementById('input-service-fee').value);
@@ -798,17 +794,28 @@
             const tbody = document.getElementById('products-tbody');
             api.listenToAllProducts((prods) => {
                 cachedProducts = prods;
-                tbody.innerHTML = "";
-                if(prods.length === 0) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--text-light);">Sem produtos cadastrados.</td></tr>`; return; }
-                prods.forEach(p => {
-                    const tr = document.createElement('tr');
-                    const statusColor = p.available ? 'var(--secondary)' : 'var(--danger)';
-                    const statusText = p.available ? 'ATIVO' : 'PAUSADO';
-                    tr.innerHTML = `<td>${p.name}</td><td>R$ ${p.price.toFixed(2)}</td><td style="text-transform: uppercase;">${p.category || '-'}</td><td><span style="color:${statusColor}; font-weight:bold; font-size:0.8rem;">${statusText}</span></td><td class="action-btns"><button class="btn-icon" onclick="editProduct('${p.id}')"><span class="material-icons-round">edit</span></button><button class="btn-icon" style="color:var(--danger);" onclick="deleteProduct('${p.id}')"><span class="material-icons-round">delete</span></button></td>`;
-                    tbody.appendChild(tr);
-                });
+                renderProductTable(prods);
             });
         }
+        
+        window.renderProductTable = (prods) => {
+            const tbody = document.getElementById('products-tbody');
+            tbody.innerHTML = "";
+            if(prods.length === 0) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px; color:var(--text-light);">Nenhum produto.</td></tr>`; return; }
+            prods.forEach(p => {
+                const tr = document.createElement('tr');
+                const statusColor = p.available ? 'var(--secondary)' : 'var(--danger)';
+                const statusText = p.available ? 'ATIVO' : 'PAUSADO';
+                tr.innerHTML = `<td>${p.name}</td><td>R$ ${p.price.toFixed(2)}</td><td style="text-transform: uppercase;">${p.category || '-'}</td><td><span style="color:${statusColor}; font-weight:bold; font-size:0.8rem;">${statusText}</span></td><td class="action-btns"><button class="btn-icon" onclick="editProduct('${p.id}')"><span class="material-icons-round">edit</span></button><button class="btn-icon" style="color:var(--danger);" onclick="deleteProduct('${p.id}')"><span class="material-icons-round">delete</span></button></td>`;
+                tbody.appendChild(tr);
+            });
+        }
+        
+        window.filterMenu = () => {
+            const term = document.getElementById('menu-search').value.toLowerCase();
+            const filtered = cachedProducts.filter(p => p.name.toLowerCase().includes(term) || (p.category && p.category.toLowerCase().includes(term)));
+            renderProductTable(filtered);
+        };
 
         window.openProductModal = (prod = null) => {
             document.getElementById('product-form').reset();

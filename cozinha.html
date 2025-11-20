@@ -151,7 +151,12 @@
             const activeOrders = orders.filter(o => o.status === 'pending' || o.status === 'preparing');
 
             // Ordena: Mais antigos primeiro (FIFO - First In First Out)
-            activeOrders.sort((a, b) => (a.created_at?.toMillis || 0) - (b.created_at?.toMillis || 0));
+            activeOrders.sort((a, b) => {
+                const dateA = a.created_at?.toMillis ? a.created_at.toMillis() : (a.created_at?.getTime ? a.created_at.getTime() : 0);
+                const dateB = b.created_at?.toMillis ? b.created_at.toMillis() : (b.created_at?.getTime ? b.created_at.getTime() : 0);
+                
+                return dateA - dateB; // <--- MUDANÇA AQUI (Crescente: Antigo -> Novo)
+            });
 
             if (activeOrders.length === 0) {
                 container.innerHTML = `
