@@ -669,71 +669,31 @@
         let catChart = null;
 
         window.loadDashboard = () => {
-            // Limpa ouvinte anterior para não duplicar
             if(salesListenerUnsubscribe) salesListenerUnsubscribe();
-
             const period = document.getElementById('dashboard-period').value;
             let startDate = new Date();
-            
-            // Lógica de Data (Retroage X dias)
-            if (period === '30' || period === '60') {
-                startDate.setDate(startDate.getDate() - parseInt(period));
-            } else if (period === 'current_month') {
-                startDate.setDate(1); // Primeiro dia do mês atual
-            } else if (period === 'last_month') {
-                startDate.setMonth(startDate.getMonth() - 1);
-                startDate.setDate(1); // Primeiro dia do mês passado
-            }
-            startDate.setHours(0,0,0,0); 
+            if(period === '30') startDate.setDate(startDate.getDate() - 30);
+            else if(period === 'current_month') startDate.setDate(1);
+            else if(period === 'last_month') { startDate.setMonth(startDate.getMonth()-1); startDate.setDate(1); }
+            startDate.setHours(0,0,0,0);
 
-            // USA A NOVA FUNÇÃO OTIMIZADA 'listenToAnalytics'
-            // (Lê a coleção 'daily_analytics' em vez de baixar todos os pedidos)
-            salesListenerUnsubscribe = api.listenToAnalytics(startDate, (dailyData) => {
-                
-                // Filtro extra para 'last_month' (corta o que passar do fim do mês)
-                if (period === 'last_month') {
-                    const nextMonth = new Date(startDate);
-                    nextMonth.setMonth(nextMonth.getMonth() + 1);
-                    const strNext = nextMonth.toISOString().split('T')[0];
-                    dailyData = dailyData.filter(d => d.date < strNext);
+            salesListenerUnsubscribe = api.listenToSales(startDate, (sales) => {
+                if(period === 'last_month') {
+                    const nextM = new Date(startDate); nextM.setMonth(nextM.getMonth()+1);
+                    sales = sales.filter(s => s.created_at.toDate() < nextM);
                 }
 
-                // AGREGAR DADOS DOS DIAS
-                let totalRevenue = 0;
-                let totalOrders = 0;
-                let catTotals = {};
-                const chartMap = {};
-
-                dailyData.forEach(day => {
-                    totalRevenue += day.total_revenue || 0;
-                    totalOrders += day.order_count || 0;
-                    
-                    // Converte data (YYYY-MM-DD) para Label do Gráfico (DD/MM)
-                    const [yyyy, mm, dd] = day.date.split('-');
-                    const dateLabel = `${dd}/${mm}`;
-                    chartMap[dateLabel] = day.total_revenue || 0;
-
-                    // Soma Categorias (estão aninhadas em categories.lanche, etc)
-                    if (day.categories) {
-                        for (const [catKey, count] of Object.entries(day.categories)) {
-                            // O nome da categoria vem "limpo" (ex: "xtudo"), tentamos usar uppercase
-                            const displayCat = catKey.toUpperCase(); 
-                            catTotals[displayCat] = (catTotals[displayCat] || 0) + count;
-                        }
-                    }
-                });
-
-                // Atualiza KPIs na tela
-                const ticket = totalOrders ? totalRevenue / totalOrders : 0;
-                document.getElementById('kpi-revenue').innerText = `R$ ${totalRevenue.toFixed(2)}`;
-                document.getElementById('kpi-orders').innerText = totalOrders;
+                const total = sales.reduce((acc, s) => acc + s.total_amount, 0);
+                const ticket = sales.length ? total / sales.length : 0;
+                document.getElementById('kpi-revenue').innerText = `R$ ${total.toFixed(2)}`;
+                document.getElementById('kpi-orders').innerText = sales.length;
                 document.getElementById('kpi-ticket').innerText = `R$ ${ticket.toFixed(2)}`;
 
-                // Renderiza Gráficos com os dados já processados
-                renderCharts(chartMap, catTotals);
+                renderCharts(sales);
             });
         };
 
+        
         function renderCharts(sales) {
             const isDark = document.body.classList.contains('dark-mode');
             const color = isDark ? '#e0e0e0' : '#333';
