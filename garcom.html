@@ -489,7 +489,12 @@
             const qty = parseInt(document.getElementById('modal-qty').innerText);
             const obs = document.getElementById('modal-obs').value;
             cart.push({
-                product_id: tempProduct.id, name: tempProduct.name, price: tempProduct.price, qty: qty, notes: obs
+                product_id: tempProduct.id, 
+                name: tempProduct.name, 
+                price: tempProduct.price, 
+                category: tempProduct.category,
+                qty: qty, 
+                notes: obs
             });
             updateCartUI();
             closeModal('product-modal');

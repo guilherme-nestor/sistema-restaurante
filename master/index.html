@@ -8,7 +8,7 @@
     <style>
         /* --- SISTEMA DE CORES (VARIÁVEIS CSS) --- */
         :root { 
-            --primary: #6366f1; /* Roxo Indigo para diferenciar do Admin do Cliente */
+            --primary: #6366f1; 
             --secondary: #10b981; 
             --danger: #ef4444; 
             --warning: #f59e0b; 
@@ -48,7 +48,6 @@
         .menu-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; color: #9ca3af; text-decoration: none; transition: 0.2s; font-weight: 500; cursor: pointer; }
         .menu-item:hover { background: rgba(255,255,255,0.05); color: white; }
         .menu-item.active { background: rgba(99, 102, 241, 0.1); color: var(--primary); font-weight: 700; }
-        /* Botão Sair específico */
         .menu-item.logout { color: var(--danger); margin-top: auto; }
         .menu-item.logout:hover { background: rgba(239, 68, 68, 0.1); }
 
@@ -58,7 +57,6 @@
         header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
         h1 { margin: 0; font-size: 1.8rem; color: var(--text-main); }
 
-        /* BOTÃO TEMA */
         .theme-toggle { background: transparent; border: 1px solid var(--border); color: var(--text-main); width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
         .theme-toggle:hover { background: rgba(0,0,0,0.05); }
 
@@ -90,10 +88,9 @@
         tr:last-child td { border-bottom: none; }
         tr:hover { background: rgba(0,0,0,0.02); }
 
-
         /* BADGES E LINKS */
         .status-badge { padding: 4px 10px; border-radius: 15px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; display: inline-flex; align-items: center; gap: 5px; }
-        .status-active { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .status-active { background: rgba(16, 185, 129, 0.1); color: var(--secondary); }
         .status-inactive { background: rgba(239, 68, 68, 0.1); color: var(--danger); }
         .status-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
         
@@ -106,6 +103,8 @@
         .action-btn.key:hover { border-color: #f59e0b; color: #f59e0b; background: rgba(245, 158, 11, 0.1); }
         .action-btn.danger:hover { border-color: var(--danger); color: var(--danger); background: rgba(239, 68, 68, 0.1); }
         .action-btn.toggle:hover { border-color: #93c5fd; background: #eff6ff; color: var(--primary); }
+        /* Botão de Histórico */
+        .action-btn.history:hover { border-color: #818cf8; color: #818cf8; background: rgba(99, 102, 241, 0.1); }
 
         /* MODAL */
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 100; display: none; align-items: center; justify-content: center; backdrop-filter: blur(3px); padding: 10px; }
@@ -113,7 +112,6 @@
         .modal-content { background: var(--card-bg); padding: 35px; border-radius: 16px; width: 100%; max-width: 450px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); animation: slideUp 0.3s; border: 1px solid var(--border); position: relative; }
         @keyframes slideUp { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         
-        /* BOTÃO DE FECHAR MODAL (X) */
         .btn-close-modal { position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 1.5rem; color: var(--text-secondary); cursor: pointer; line-height: 1; padding: 5px; }
         .btn-close-modal:hover { color: var(--text-main); }
         
@@ -129,7 +127,6 @@
         .user-exists-info { background: rgba(99, 102, 241, 0.05); border: 1px solid rgba(99, 102, 241, 0.2); color: var(--primary); padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; word-break: break-all; }
         .user-exists-info strong { display: block; font-size: 1.1rem; margin-bottom: 5px; }
 
-        /* LOADING */
         #loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 200; display: none; flex-direction: column; align-items: center; justify-content: center; color: white; }
         .spinner { width: 40px; height: 40px; border: 4px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; animation: spin 1s ease-in-out infinite; margin-bottom: 15px;}
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -137,13 +134,11 @@
         @media (max-width: 768px) {
             body { flex-direction: column; overflow-y: auto; }
             aside { width: 100%; padding: 15px 20px; flex-direction: row; justify-content: space-between; align-items: center; height: auto; }
-            aside nav { display: none; } /* Esconde menu normal */
+            aside nav { display: none; }
             .brand { margin-bottom: 0; }
             main { padding: 20px; }
             .kpi-grid { grid-template-columns: 1fr; }
             .modal-content { width: 95%; }
-            
-            /* Botão sair no header mobile */
             .mobile-logout { display: block; font-size: 1.5rem; color: var(--danger); cursor: pointer; }
         }
         @media (min-width: 769px) { .mobile-logout { display: none; } }
@@ -154,7 +149,6 @@
     <div id="loading-overlay">
         <div class="spinner"></div>
         <h3 id="loading-text">Processando...</h3>
-        <small id="loading-subtext" style="color: #ccc;"></small>
     </div>
 
     <aside>
@@ -165,7 +159,6 @@
             <a class="menu-item active"><span class="material-icons-round">grid_view</span> <span>Dashboard</span></a>
         </nav>
         
-        <!-- BOTÃO DE SAIR (SIDEBAR) -->
         <a class="menu-item logout" onclick="window.logout()">
             <span class="material-icons-round">logout</span> <span>Sair</span>
         </a>
@@ -181,10 +174,7 @@
                 <button class="theme-toggle" onclick="toggleTheme()">
                     <span class="material-icons-round" id="theme-icon">dark_mode</span>
                 </button>
-                
-                <!-- Ícone Sair Mobile -->
                 <span class="material-icons-round mobile-logout" onclick="window.logout()">logout</span>
-
                 <div style="text-align: right;" class="desktop-user-info">
                     <div style="font-weight: bold; font-size: 0.9rem;">Super Admin</div>
                 </div>
@@ -226,7 +216,6 @@
         </div>
     </main>
 
-    <!-- MODAL: NOVO CLIENTE (COM LOGIN) -->
     <div class="modal-overlay" id="client-modal">
         <div class="modal-content">
             <button class="btn-close-modal" onclick="closeModal()">&times;</button>
@@ -239,6 +228,12 @@
                 <div class="form-group">
                     <label>ID do Sistema (Link)</label>
                     <input type="text" id="client-slug" placeholder="Ex: burger-king" required>
+                </div>
+                
+                <div class="form-group">
+                    <label>Histórico de Analytics (Dias)</label>
+                    <input type="number" id="client-retention" placeholder="Padrão: 30" value="30" min="1" required>
+                    <div class="form-helper">Define quantos dias de faturamento o sistema guarda.</div>
                 </div>
                 
                 <hr style="border: 0; border-top: 1px solid var(--border); margin: 20px 0;">
@@ -261,13 +256,32 @@
         </div>
     </div>
 
-    <!-- MODAL: GESTÃO DE LOGIN (EDIÇÃO) -->
+    <div class="modal-overlay" id="retention-modal">
+        <div class="modal-content">
+            <button class="btn-close-modal" onclick="closeRetentionModal()">&times;</button>
+            <h2 style="margin-top: 0; color: var(--text-main);">Editar Histórico</h2>
+            <form id="edit-retention-form">
+                <input type="hidden" id="edit-retention-id">
+                <div class="form-group">
+                    <label>Dias de Retenção (Analytics)</label>
+                    <input type="number" id="edit-retention-days" required min="1">
+                    <div class="form-helper">
+                        ⚠️ Atenção: Se você diminuir os dias, o sistema apagará permanentemente dados antigos na próxima manutenção automática.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-cancel" onclick="closeRetentionModal()">Cancelar</button>
+                    <button type="submit" class="btn-save">Salvar Alteração</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="modal-overlay" id="login-modal">
         <div class="modal-content">
             <button class="btn-close-modal" onclick="closeLoginModal()">&times;</button>
             <h2 style="margin-top: 0; color: var(--text-main);">Acesso do Cliente</h2>
             
-            <!-- ESTADO 1: JÁ TEM LOGIN -->
             <div id="user-exists-view" style="display: none;">
                 <div class="user-exists-info">
                     <strong>Login Atual:</strong>
@@ -277,7 +291,6 @@
                 <button onclick="window.resetPasswordAction()" class="btn-cancel" style="width: 100%; margin-bottom: 10px;">Enviar Reset de Senha</button>
             </div>
 
-            <!-- ESTADO 2: CRIAR OU EDITAR -->
             <form id="create-login-form" style="display: none;">
                 <input type="hidden" id="login-restaurant-id">
                 <input type="hidden" id="is-edit-mode">
@@ -301,13 +314,11 @@
 
     <script type="module">
         import { SaasService } from '../js/SaasService.js';
-        
         const api = new SaasService(null, true);
         
-        // SEGURANÇA
         api.requireAuth((user, role) => {
             if (role !== 'super_admin') {
-                alert("Acesso Negado: Área exclusiva para Super Admin.");
+                alert("Acesso Negado.");
                 api.logout();
                 return;
             }
@@ -316,7 +327,6 @@
 
         let allClients = [];
 
-        // TEMA
         window.toggleTheme = () => {
             const body = document.body;
             const icon = document.getElementById('theme-icon');
@@ -332,7 +342,6 @@
         };
         if (localStorage.getItem('super_theme') === 'dark') document.body.classList.add('dark-mode');
 
-        // LOAD
         async function loadClients() {
             try {
                 allClients = await api.getAllRestaurants();
@@ -350,10 +359,17 @@
                 const isActive = client.active !== false;
                 const statusHtml = isActive ? `<span class="status-badge status-active"><div class="status-dot"></div> ATIVO</span>` : `<span class="status-badge status-inactive"><div class="status-dot"></div> BLOQUEADO</span>`;
                 const toggleIcon = isActive ? 'lock' : 'lock_open';
+                
+                // Recupera dias de retenção (default 30 se não existir)
+                const retentionDays = client.config_ops?.retention_days || 30;
 
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td><div style="font-weight: 600;">${client.name}</div><div style="font-size: 0.8rem; opacity: 0.7;">ID: ${client.id}</div></td>
+                    <td>
+                        <div style="font-weight: 600;">${client.name}</div>
+                        <div style="font-size: 0.8rem; opacity: 0.7;">ID: ${client.id}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">Histórico: ${retentionDays} dias</div>
+                    </td>
                     <td>${statusHtml}</td> 
                     <td>
                         <div class="quick-links">
@@ -364,7 +380,11 @@
                         </div>
                     </td>
                     <td style="text-align: right;">
-                        <button class="action-btn" onclick="window.openLoginModal('${client.id}')" title="Gerenciar Login"><span class="material-icons-round">vpn_key</span></button>
+                        <button class="action-btn history" onclick="window.openRetentionModal('${client.id}', ${retentionDays})" title="Alterar Histórico">
+                            <span class="material-icons-round">history</span>
+                        </button>
+
+                        <button class="action-btn key" onclick="window.openLoginModal('${client.id}')" title="Gerenciar Login"><span class="material-icons-round">vpn_key</span></button>
                         <button class="action-btn" onclick="window.toggleClientStatus('${client.id}', ${isActive})" title="Bloquear/Ativar"><span class="material-icons-round">${toggleIcon}</span></button>
                         <button class="action-btn danger" onclick="window.wipeClientData('${client.id}')" title="Excluir"><span class="material-icons-round">delete_forever</span></button>
                     </td>
@@ -381,7 +401,31 @@
             document.getElementById('inactive-clients').innerText = total - active;
         }
 
-        // AÇÕES
+        // --- LÓGICA DE RETENÇÃO ---
+        window.openRetentionModal = (id, currentDays) => {
+            document.getElementById('edit-retention-id').value = id;
+            document.getElementById('edit-retention-days').value = currentDays;
+            document.getElementById('retention-modal').classList.add('open');
+        };
+        window.closeRetentionModal = () => document.getElementById('retention-modal').classList.remove('open');
+
+        document.getElementById('edit-retention-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const id = document.getElementById('edit-retention-id').value;
+            const days = document.getElementById('edit-retention-days').value;
+            const btn = e.target.querySelector('.btn-save');
+            btn.innerText = "Salvando..."; btn.disabled = true;
+
+            try {
+                await api.updateRetentionPolicy(id, days);
+                alert("Política atualizada!");
+                closeRetentionModal();
+                loadClients();
+            } catch(err) { alert(err.message); }
+            finally { btn.innerText = "Salvar Alteração"; btn.disabled = false; }
+        });
+
+        // --- OUTRAS AÇÕES ---
         window.toggleClientStatus = async (id, currentStatus) => {
             if(confirm(`Deseja ${!currentStatus ? 'ATIVAR' : 'BLOQUEAR'} este cliente?`)) {
                 await api.toggleRestaurantStatus(id, !currentStatus); loadClients();
@@ -400,46 +444,46 @@
             finally { loading.style.display = 'none'; }
         };
 
-        // --- 1. CRIAÇÃO COMPLETA ---
+        // --- CRIAÇÃO DE CLIENTE (Com campo de retenção) ---
         document.getElementById('create-client-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const name = document.getElementById('client-name').value;
             const slug = document.getElementById('client-slug').value;
             const email = document.getElementById('client-email').value;
             const pass = document.getElementById('client-pass').value;
+            const retention = document.getElementById('client-retention').value; // Captura novo campo
             
             const btn = e.target.querySelector('.btn-save');
             btn.innerText = "Criando..."; btn.disabled = true;
 
             try {
-                await api.createRestaurant(slug, name);
+                // Passa retention como 3º argumento
+                await api.createRestaurant(slug, name, retention);
                 await api.registerOwner(email, pass, slug);
                 closeModal();
                 document.getElementById('create-client-form').reset();
+                // Reseta o campo de retenção para 30
+                document.getElementById('client-retention').value = 30;
                 loadClients();
                 alert("Cliente e Login criados com sucesso!");
             } catch (error) {
                 alert("Erro: " + error.message);
             } finally {
-                btn.innerText = "Criar Acesso"; btn.disabled = false;
+                btn.innerText = "Criar Tudo"; btn.disabled = false;
             }
         });
 
-        // --- 2. GESTÃO DE LOGIN ---
+        // --- GESTÃO DE LOGIN ---
         let currentOwnerData = null;
-        
         window.openLoginModal = async (id) => {
             document.getElementById('login-restaurant-id').value = id;
             const owner = await api.getRestaurantOwner(id);
             currentOwnerData = owner;
-            
             if (owner) {
                 document.getElementById('user-exists-view').style.display = 'block';
                 document.getElementById('create-login-form').style.display = 'none';
                 document.getElementById('existing-email').innerText = owner.email;
-            } else {
-                window.showEditLogin(false); 
-            }
+            } else { window.showEditLogin(false); }
             document.getElementById('login-modal').classList.add('open');
         };
 
@@ -447,13 +491,10 @@
             document.getElementById('user-exists-view').style.display = 'none';
             document.getElementById('create-login-form').style.display = 'block';
             document.getElementById('is-edit-mode').value = isEdit ? 'true' : 'false';
-            
             if(isEdit && currentOwnerData) {
                 document.getElementById('login-email').value = currentOwnerData.email;
                 document.getElementById('old-uid').value = currentOwnerData.uid;
-            } else {
-                document.getElementById('create-login-form').reset();
-            }
+            } else { document.getElementById('create-login-form').reset(); }
         };
 
         document.getElementById('create-login-form').addEventListener('submit', async (e) => {
@@ -463,35 +504,26 @@
             const pass = document.getElementById('login-pass').value;
             const isEdit = document.getElementById('is-edit-mode').value === 'true';
             const oldUid = document.getElementById('old-uid').value;
-            
             const btn = e.target.querySelector('.btn-save');
             btn.innerText = "..."; btn.disabled = true;
-
             try {
-                if (isEdit) {
-                    await api.forceUpdateOwnerAccess(oldUid, email, pass, id);
-                    alert("Login atualizado!");
-                } else {
-                    await api.registerOwner(email, pass, id);
-                    alert("Login criado!");
-                }
+                if (isEdit) { await api.forceUpdateOwnerAccess(oldUid, email, pass, id); alert("Login atualizado!"); } 
+                else { await api.registerOwner(email, pass, id); alert("Login criado!"); }
                 closeLoginModal();
             } catch (err) { alert(err.message); } 
             finally { btn.innerText = "Salvar"; btn.disabled = false; }
         });
 
         window.resetPasswordAction = async () => {
-            if(currentOwnerData && confirm(`Enviar reset de senha para ${currentOwnerData.email}?`)) {
+            if(currentOwnerData && confirm(`Enviar reset para ${currentOwnerData.email}?`)) {
                 try { await api.resetUserPassword(currentOwnerData.email); alert("E-mail enviado!"); }
                 catch(e) { alert(e.message); }
             }
         };
 
-        window.logout = async () => {
-            await api.logout(); 
-        };
-
+        window.logout = async () => { await api.logout(); };
         window.closeLoginModal = () => document.getElementById('login-modal').classList.remove('open');
+        
         document.getElementById('client-name').addEventListener('input', (e) => {
             document.getElementById('client-slug').value = e.target.value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, '-').replace(/[^\w\-]+/g, '');
         });
@@ -501,7 +533,6 @@
         });
         window.openModal = () => document.getElementById('client-modal').classList.add('open');
         window.closeModal = () => document.getElementById('client-modal').classList.remove('open');
-
     </script>
 </body>
 </html>

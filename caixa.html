@@ -20,6 +20,7 @@
             --modal-overlay: rgba(0,0,0,0.7);
             --button-hover-filter: brightness(1.1);
             --nav-hover: rgba(0,0,0,0.05);
+            --danger: #ef5350;
         }
         
         body.dark-mode {
@@ -73,7 +74,6 @@
             margin-bottom: 30px;
         }
         
-        /* Container de navegação */
         .nav-container {
             display: flex;
             flex-direction: column;
@@ -92,6 +92,7 @@
             display: flex; 
             align-items: center; 
             gap: 12px; 
+            text-decoration: none;
         }
         .menu-item:hover { background: var(--nav-hover); color: var(--primary); }
         .menu-item.active { background: rgba(211, 47, 47, 0.1); color: var(--primary); }
@@ -129,7 +130,7 @@
         
         /* Botão Tema no Header (Mobile) */
         .theme-toggle-header { 
-            display: none; /* Escondido no desktop */
+            display: none; 
             background: transparent; 
             border: 1px solid var(--border); 
             color: var(--text); 
@@ -190,8 +191,10 @@
         .st-pending { background: rgba(239, 108, 0, 0.15); color: #ef6c00; }
         .st-preparing { background: rgba(33, 150, 243, 0.15); color: #2196f3; }
         .st-ready { background: rgba(46, 125, 50, 0.15); color: var(--secondary); }
-        .st-cancelled { background: rgba(211, 47, 47, 0.1); color: var(--primary); }
-        .st-served { background: #ccc; color: #333; }
+        .st-cancelled { background: rgba(239, 83, 80, 0.15); color: var(--danger); }
+        .st-served { background: rgba(158, 158, 158, 0.15); color: #757575; }
+        .st-paid { background: rgba(76, 175, 80, 0.15); color: #2e7d32; border: 1px solid #2e7d32; }
+        .st-finalizado { background: rgba(0, 0, 0, 0.05); color: #999; }
         
         /* BOTÕES */
         .btn-pay { background: var(--secondary); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 0.9rem; transition: 0.2s; }
@@ -212,10 +215,11 @@
         /* MODAL INVOICE */
         .invoice-modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--modal-overlay); z-index: 2000; display: none; align-items: center; justify-content: center; backdrop-filter: blur(2px); padding: 20px; box-sizing: border-box; }
         .invoice-modal-overlay.open { display: flex; }
-        .modal-content { background: var(--card-bg); width: 100%; max-width: 450px; border-radius: 15px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); color: var(--text); border: 1px solid var(--border); animation: slideIn 0.2s ease-out; max-height: 90vh; overflow-y: auto; }
+        .modal-content { background: var(--card-bg); width: 100%; max-width: 450px; border-radius: 12px; padding: 30px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); color: var(--text); border: 1px solid var(--border); animation: slideIn 0.2s ease-out; max-height: 90vh; overflow-y: auto; }
         @keyframes slideIn { from { transform: translateY(20px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
         .invoice-item-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed var(--border); font-size: 1rem; }
+        .invoice-item-row:last-of-type { border-bottom: none; }
         .invoice-subtotal-row { padding-top: 10px; font-weight: 500; font-size: 1.1rem; }
         .invoice-tax-row { font-size: 0.9rem; color: var(--text-secondary); }
         .invoice-total-row { padding-top: 15px; border-top: 2px solid var(--border); margin-top: 15px; font-size: 1.6rem; font-weight: bold; color: var(--secondary); }
@@ -224,6 +228,7 @@
         .invoice-actions button { padding: 12px; font-size: 1.1rem; width: 100%; border-radius: 8px; }
         
         .btn-modal-back { background: var(--bg); color: var(--text); border: 1px solid var(--border); }
+        .btn-modal-back:hover { filter: brightness(0.9); }
         
         /* --- MOBILE --- */
         @media (max-width: 900px) {
@@ -236,7 +241,7 @@
                 flex-direction: row; justify-content: center; background: var(--sidebar-bg);
                 box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 999;
             }
-            aside h1, .theme-toggle-sidebar { display: none; } /* Esconde elementos desktop */
+            aside h1, .theme-toggle-sidebar { display: none; } 
 
             .nav-container { flex-direction: row; width: 100%; justify-content: space-around; align-items: center; gap: 0; }
             
@@ -252,7 +257,6 @@
             .header-content { margin-bottom: 20px; }
             h2 { margin: 0; font-size: 1.5rem; }
             
-            /* Mostra botão de tema no header */
             .theme-toggle-header { display: flex; }
             
             .kpi-card { width: 100%; margin-top: 10px; justify-content: space-between; }
@@ -271,10 +275,14 @@
         
         <div class="nav-container">
             <div class="menu-item active" onclick="trocarVisao('mesas')" id="nav-mesas">
-                <span class="material-icons-round">table_restaurant</span> Contas
+                <span class="material-icons-round">table_restaurant</span> <span>Contas</span>
             </div>
             <div class="menu-item" onclick="trocarVisao('pedidos')" id="nav-pedidos">
-                <span class="material-icons-round">receipt_long</span> Pedidos
+                <span class="material-icons-round">receipt_long</span> <span>Pedidos</span>
+            </div>
+            <!-- NOVO ITEM DE MENU -->
+            <div class="menu-item" onclick="trocarVisao('history')" id="nav-history">
+                <span class="material-icons-round">history</span> <span>Histórico Dia</span>
             </div>
         </div>
     </aside>
@@ -284,7 +292,6 @@
             <div style="display: flex; align-items: center; gap: 15px; width: 100%; justify-content: space-between;">
                 <h2 id="page-title" style="margin: 0; color: var(--primary);">Contas por Mesa</h2>
                 
-                <!-- Botão de Tema Mobile -->
                 <button class="theme-toggle-header" onclick="toggleTheme()">
                     <span class="material-icons-round" id="theme-icon-header">dark_mode</span>
                 </button>
@@ -315,16 +322,13 @@
 
     <script type="module">
         import { SaasService } from './js/SaasService.js';
-        
-        // Inicializa sem ID, pega da URL
         const api = new SaasService(); 
 
-        // LÓGICA DE TEMA (DARK/LIGHT)
+        // LÓGICA DE TEMA
         window.toggleTheme = () => {
             const body = document.body;
             const iconSide = document.getElementById('theme-icon-side');
             const iconHead = document.getElementById('theme-icon-header');
-            
             if (body.classList.contains('dark-mode')) {
                 body.classList.remove('dark-mode');
                 if(iconSide) iconSide.innerText = 'dark_mode';
@@ -337,8 +341,6 @@
                 localStorage.setItem('pos_theme', 'dark');
             }
         };
-        
-        // Carrega tema salvo
         if (localStorage.getItem('pos_theme') === 'dark') {
             document.body.classList.add('dark-mode');
             if(document.getElementById('theme-icon-side')) document.getElementById('theme-icon-side').innerText = 'light_mode';
@@ -349,15 +351,13 @@
         const totalDisplay = document.getElementById('total-pending');
         
         let currentOrders = [];
+        let historyUnsubscribe = null;
         let currentView = 'mesas'; 
         window.mesasCache = {}; 
         let SERVICE_FEE_PERCENTAGE = 0;
 
-        // INICIALIZAÇÃO
         (async () => {
-            // Verifica segurança (Funcionário ou Dono)
             api.requireAuth(null, ['owner', 'employee']);
-            
             try {
                 const config = await api.getRestaurantConfig();
                 SERVICE_FEE_PERCENTAGE = config.serviceFeePercentage / 100;
@@ -365,7 +365,8 @@
             
             api.listenToOrders((orders) => {
                 currentOrders = orders;
-                render();
+                // Atualiza apenas se não estiver na aba de histórico
+                if (currentView !== 'history') render();
             });
         })();
         
@@ -376,28 +377,29 @@
             const totalGeral = activeOrdersForKPI.reduce((acc, order) => order.total_amount ? acc + order.total_amount : acc, 0);
             totalDisplay.innerText = `R$ ${totalGeral.toFixed(2)}`;
 
-            if (currentOrders.length === 0) {
-                container.innerHTML = "<p class='loading'>Nenhum pedido aberto no momento.</p>";
-                return;
+            if (currentView === 'mesas') {
+                if (currentOrders.length === 0) container.innerHTML = "<p class='loading'>Nenhum pedido aberto.</p>";
+                else renderViewMesas(currentOrders);
+            } 
+            else if (currentView === 'pedidos') {
+                if (currentOrders.length === 0) container.innerHTML = "<p class='loading'>Nenhum pedido aberto.</p>";
+                else renderViewPedidos(currentOrders);
             }
-
-            if (currentView === 'mesas') renderViewMesas(currentOrders);
-            else renderViewPedidos(currentOrders);
+            else if (currentView === 'history') {
+                // Renderização gerenciada pelo renderViewHistory
+            }
         };
 
         function renderViewMesas(orders) {
             document.getElementById('page-title').innerText = "Contas por Mesa";
             const mesas = {};
-            
             orders.forEach(order => {
                 if(order.status === 'cancelled') return; 
                 const numMesa = order.table_number;
                 if (!mesas[numMesa]) mesas[numMesa] = { numero: numMesa, total: 0, ids: [], itens: [], lastTime: null };
-                
                 mesas[numMesa].total += order.total_amount;
                 mesas[numMesa].ids.push(order.id);
                 if (order.items) mesas[numMesa].itens.push(...order.items);
-                
                 const orderDate = order.created_at?.toDate ? order.created_at.toDate() : new Date();
                 if (!mesas[numMesa].lastTime || orderDate > mesas[numMesa].lastTime) mesas[numMesa].lastTime = orderDate;
             });
@@ -405,28 +407,19 @@
 
             let html = `<table><thead><tr><th>Mesa</th><th>Resumo</th><th>Hora</th><th>Total</th><th>Ação</th></tr></thead><tbody>`;
             const listaMesas = Object.values(mesas).sort((a, b) => a.numero - b.numero);
-            
             if (listaMesas.length === 0) { container.innerHTML = "<p class='loading'>Nenhuma conta ativa.</p>"; return; }
 
             listaMesas.forEach(mesa => {
                 const hora = mesa.lastTime.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
                 const itensHtml = mesa.itens.map(i => `<span>${i.qty}x ${i.name}</span>`).join('');
-
-                html += `
-                    <tr>
-                        <td style="font-weight:bold; font-size:1.2rem; color:var(--primary);">#${mesa.numero}</td>
-                        <td><div style="font-weight:bold;">${mesa.ids.length} pedidos</div><div class="items-list">${itensHtml}</div></td>
-                        <td>${hora}</td>
-                        <td style="font-weight:bold;">R$ ${mesa.total.toFixed(2)}</td>
-                        <td><button class="btn-close-table" onclick="openInvoiceDetail(${mesa.numero})">Fechar</button></td>
-                    </tr>`;
+                html += `<tr><td style="font-weight:bold; font-size:1.2rem; color:var(--primary);">#${mesa.numero}</td><td><div style="font-weight:bold;">${mesa.ids.length} pedidos</div><div class="items-list">${itensHtml}</div></td><td>${hora}</td><td style="font-weight:bold;">R$ ${mesa.total.toFixed(2)}</td><td><button class="btn-close-table" onclick="openInvoiceDetail(${mesa.numero})">Fechar</button></td></tr>`;
             });
             html += `</tbody></table>`;
             container.innerHTML = html;
         }
 
         function renderViewPedidos(orders) {
-            document.getElementById('page-title').innerText = "Todos os Pedidos (Detalhado)";
+            document.getElementById('page-title').innerText = "Pedidos Detalhados";
             let html = `
             <div class="table-wrapper">
                 <table>
@@ -438,50 +431,97 @@
             orders.forEach(order => {
                 const date = order.created_at?.toDate ? order.created_at.toDate() : new Date();
                 const hora = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-                
-                let statusClass = 'st-pending'; 
-                let statusLabel = 'Novo'; 
-                let actionEnabled = true;
+                let statusClass = 'st-pending'; let statusLabel = 'Novo'; let actionEnabled = true;
 
                 if(order.status === 'preparing') { statusClass = 'st-preparing'; statusLabel = 'Cozinha'; }
                 else if(order.status === 'ready') { statusClass = 'st-ready'; statusLabel = 'Pronto'; }
                 else if(order.status === 'served') { statusClass = 'st-served'; statusLabel = 'Servido'; }
-                else if(order.status === 'cancelled') { 
-                    statusClass = 'st-cancelled'; 
-                    statusLabel = 'CANCELADO'; 
-                    // actionEnabled agora continua true para permitir clicar no botão de limpar
-                }
+                else if(order.status === 'cancelled') { statusClass = 'st-cancelled'; statusLabel = 'Cancelado'; }
 
                 const itensResumo = order.items.map(i => `${i.qty}x ${i.name}`).join(', ');
-                
                 let actionButton = '';
 
-                // LÓGICA CORRIGIDA DOS BOTÕES
                 if (order.status === 'cancelled') {
-                    // Botão especial para limpar pedidos cancelados
                     actionButton = `<button class="btn-pay" style="background-color: #757575;" onclick="arquivarPedido('${order.id}')">🗑️ Limpar</button>`;
                 } else {
-                    // Botão padrão de Baixar
-                    actionButton = `<button class="btn-pay" onclick="pagarPedidoUnico('${order.id}', ${order.table_number})" ${actionEnabled ? '' : 'disabled'}>Baixar Item</button>`;
-                    
-                    // Botão extra se estiver pronto
-                    if (order.status === 'ready') {
-                        actionButton += `<button class="btn-served" onclick="marcarServido('${order.id}', ${order.table_number})" ${actionEnabled ? '' : 'disabled'}>Servido</button>`;
-                    }
+                    actionButton = `<button class="btn-pay" onclick="pagarPedidoUnico('${order.id}', ${order.table_number})" ${actionEnabled ? '' : 'disabled'}>Baixar</button>`;
+                    if (order.status === 'ready') actionButton += `<button class="btn-served" onclick="marcarServido('${order.id}', ${order.table_number})" ${actionEnabled ? '' : 'disabled'}>Servir</button>`;
                 }
 
-                html += `
-                    <tr>
-                        <td style="font-weight:bold;">#${order.table_number}</td>
-                        <td><span class="badge ${statusClass}">${statusLabel}</span></td>
-                        <td>${hora}</td>
-                        <td style="color:var(--text-secondary);">${itensResumo}</td>
-                        <td>R$ ${order.total_amount.toFixed(2)}</td>
-                        <td>${actionButton}</td>
-                    </tr>`;
+                html += `<tr><td>#${order.table_number}</td><td><span class="badge ${statusClass}">${statusLabel}</span></td><td>${hora}</td><td style="color:var(--text-secondary); white-space:normal;">${itensResumo}</td><td>R$ ${order.total_amount.toFixed(2)}</td><td>${actionButton}</td></tr>`;
             });
             html += `</tbody></table></div>`;
             container.innerHTML = html;
+        }
+
+        // --- NOVA FUNÇÃO: RENDERIZAR HISTÓRICO COMPLETO DO DIA ---
+        function renderViewHistory() {
+            document.getElementById('page-title').innerText = "Histórico do Dia";
+            container.innerHTML = "<p class='loading'>Carregando histórico completo...</p>";
+
+            const startOfDay = new Date();
+            startOfDay.setHours(0,0,0,0);
+
+            // Busca pedidos PAGOS e FINALIZADOS do banco
+            if(historyUnsubscribe) historyUnsubscribe();
+            
+            historyUnsubscribe = api.listenToHistory(startOfDay, (closedOrders) => {
+                
+                // Filtra pedidos ativos da memória para garantir que sejam só de hoje
+                const activeOrdersToday = currentOrders.filter(o => {
+                     const d = o.created_at?.toDate ? o.created_at.toDate() : new Date();
+                     return d >= startOfDay;
+                });
+
+                // Junta os ativos (memória) com os fechados (banco)
+                const allOrders = [...activeOrdersToday, ...closedOrders];
+                
+                // Ordena: Mais recentes primeiro
+                allOrders.sort((a, b) => {
+                    const dateA = a.created_at?.toMillis ? a.created_at.toMillis() : 0;
+                    const dateB = b.created_at?.toMillis ? b.created_at.toMillis() : 0;
+                    return dateB - dateA;
+                });
+
+                if (allOrders.length === 0) {
+                    container.innerHTML = "<p class='loading'>Nenhum movimento hoje.</p>";
+                    return;
+                }
+
+                let html = `
+                <div class="table-wrapper">
+                    <table>
+                        <thead><tr><th>Mesa</th><th>Status</th><th>Hora</th><th>Itens</th><th>Valor</th></tr></thead>
+                        <tbody>`;
+
+                allOrders.forEach(order => {
+                    const date = order.created_at?.toDate ? order.created_at.toDate() : new Date(order.created_at.seconds * 1000);
+                    const hora = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+                    
+                    let statusClass = 'st-pending'; 
+                    let statusLabel = 'Novo';
+
+                    if(order.status === 'paid') { statusClass = 'st-paid'; statusLabel = 'Pago'; }
+                    else if(order.status === 'preparing') { statusClass = 'st-preparing'; statusLabel = 'Cozinha'; }
+                    else if(order.status === 'ready') { statusClass = 'st-ready'; statusLabel = 'Pronto'; }
+                    else if(order.status === 'served') { statusClass = 'st-served'; statusLabel = 'Servido'; }
+                    else if(order.status === 'cancelled') { statusClass = 'st-cancelled'; statusLabel = 'Cancelado'; }
+                    else if(order.status === 'finalizado') { statusClass = 'st-cancelled'; statusLabel = 'Cancelado'; } 
+
+                    const itensResumo = order.items ? order.items.map(i => `${i.qty}x ${i.name}`).join(', ') : '-';
+
+                    html += `
+                        <tr>
+                            <td style="font-weight:bold;">#${order.table_number}</td>
+                            <td><span class="badge ${statusClass}">${statusLabel}</span></td>
+                            <td>${hora}</td>
+                            <td style="color:var(--text-secondary); white-space:normal;">${itensResumo}</td>
+                            <td>R$ ${order.total_amount.toFixed(2)}</td>
+                        </tr>`;
+                });
+                html += `</tbody></table></div>`;
+                container.innerHTML = html;
+            });
         }
 
         window.arquivarPedido = async (id) => {
@@ -552,8 +592,17 @@
         window.trocarVisao = (novaVisao) => {
             currentView = novaVisao;
             document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
-            document.getElementById(`nav-${novaVisao}`).classList.add('active');
-            render(); 
+            
+            // Ajuste para selecionar o menu correto
+            if(novaVisao === 'history') {
+                 document.getElementById('nav-history').classList.add('active');
+                 renderViewHistory();
+            } else {
+                 document.getElementById(`nav-${novaVisao}`).classList.add('active');
+                 // Se sair do histórico, cancela o listener de vendas para economizar
+                 if(historyUnsubscribe) { historyUnsubscribe(); historyUnsubscribe = null; }
+                 render(); 
+            }
         };
     </script>
 </body>

@@ -146,6 +146,18 @@
         .mobile-logout { display: none; color: var(--danger); border-color: var(--danger); }
         .mobile-user-info { display: none; font-size: 0.8rem; color: var(--text-light); margin-bottom: 20px; padding: 8px 12px; background: var(--nav-hover); border-radius: 6px; border: 1px solid var(--border); text-align: center; word-break: break-all; }
 
+        /* Toggle Switch Estilo iOS */
+        .switch-container { display: flex; align-items: center; gap: 10px; margin-right: 15px; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 26px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 3px; bottom: 3px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--secondary); }
+        input:checked + .slider:before { transform: translateX(24px); }
+        .status-label { font-weight: bold; font-size: 0.9rem; min-width: 60px; text-align: center;}
+        .status-closed { color: var(--danger); }
+        .status-open { color: var(--secondary); }
+
         /* --- VIEWS (Abas) --- */
         .view-container { display: none; max-width: 1200px; margin: 0 auto; padding-bottom: 80px; width: 100%; } 
         .view-container.active { display: block; animation: fadeIn 0.3s; }
@@ -341,7 +353,16 @@
                 <h1>Visão Geral</h1>
                 <div class="restaurant-name" id="header-restaurant-name">...</div>
             </div>
+            
             <div class="header-actions">
+                <div class="switch-container">
+                    <span id="status-text" class="status-label status-closed">FECHADO</span>
+                    <label class="switch">
+                        <input type="checkbox" id="toggle-operation">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                
                 <button class="icon-btn" onclick="toggleTheme()" title="Mudar Tema">
                     <span class="material-icons-round" id="theme-icon">dark_mode</span>
                 </button>
@@ -478,6 +499,12 @@
                     <span class="kpi-label">Ticket Médio</span>
                     <span class="kpi-value" id="kpi-ticket">R$ 0,00</span>
                 </div>
+                <div class="kpi-card">
+                    <span class="kpi-label">Top 3 Mais Pedidos</span>
+                    <div id="top-products-list" style="font-size: 0.85rem; color: var(--text-light); margin-top: 10px; min-height: 60px;">
+                        <span style="opacity: 0.5;">Carregando...</span>
+                    </div>
+                </div>
             </div>
 
             <div class="chart-grid">
@@ -609,6 +636,51 @@
             loadProducts();
             // Dashboard não carrega automaticamente
 
+            
+
+            // --- LÓGICA DO BOTÃO ABRIR/FECHAR ---
+            const toggleBtn = document.getElementById('toggle-operation');
+            const statusText = document.getElementById('status-text');
+            toggleBtn.checked = config.isOpen;
+            updateStatusLabel(config.isOpen);
+
+            // 1. Escutar mudanças vindas do banco (tempo real)
+            // O SaasService dispara esse evento quando lê o documento
+            window.addEventListener('restaurantStatusChanged', (e) => {
+                const isOpen = e.detail.isOpen;
+                // Só atualiza se for diferente para evitar loop visual
+                if (toggleBtn.checked !== isOpen) {
+                    toggleBtn.checked = isOpen;
+                    updateStatusLabel(isOpen);
+                }
+            });
+
+            // 2. Ação de Clicar (Enviar para o banco)
+            toggleBtn.addEventListener('change', async (e) => {
+                const newState = e.target.checked;
+                updateStatusLabel(newState); // Muda visualmente na hora
+                
+                try {
+                    console.log("Salvando status:", newState); // Debug
+                    await api.toggleOperationStatus(newState);
+                } catch (err) {
+                    alert("Erro ao atualizar status: " + err.message);
+                    // Reverte se der erro
+                    toggleBtn.checked = !newState; 
+                    updateStatusLabel(!newState);
+                }
+            });
+
+            function updateStatusLabel(isOpen) {
+                if (isOpen) {
+                    statusText.innerText = "ABERTO";
+                    statusText.className = "status-label status-open";
+                } else {
+                    statusText.innerText = "FECHADO";
+                    statusText.className = "status-label status-closed";
+                }
+            }
+
             document.getElementById('btn-save-configs').onclick = async () => {
                 const fee = parseInt(document.getElementById('input-service-fee').value);
                 if (isNaN(fee)) return alert("Valor inválido");
@@ -670,46 +742,96 @@
 
         window.loadDashboard = () => {
             if(salesListenerUnsubscribe) salesListenerUnsubscribe();
+
             const period = document.getElementById('dashboard-period').value;
             let startDate = new Date();
-            if(period === '30') startDate.setDate(startDate.getDate() - 30);
-            else if(period === 'current_month') startDate.setDate(1);
-            else if(period === 'last_month') { startDate.setMonth(startDate.getMonth()-1); startDate.setDate(1); }
-            startDate.setHours(0,0,0,0);
+            
+            if (period === '30' || period === '60') startDate.setDate(startDate.getDate() - parseInt(period));
+            else if (period === 'current_month') startDate.setDate(1);
+            else if (period === 'last_month') { startDate.setMonth(startDate.getMonth() - 1); startDate.setDate(1); }
+            startDate.setHours(0,0,0,0); 
 
-            salesListenerUnsubscribe = api.listenToSales(startDate, (sales) => {
-                if(period === 'last_month') {
-                    const nextM = new Date(startDate); nextM.setMonth(nextM.getMonth()+1);
-                    sales = sales.filter(s => s.created_at.toDate() < nextM);
+            salesListenerUnsubscribe = api.listenToAnalytics(startDate, (dailyData) => {
+                
+                if (period === 'last_month') {
+                    const nextMonth = new Date(startDate); nextMonth.setMonth(nextMonth.getMonth() + 1);
+                    const strNext = nextMonth.toISOString().split('T')[0];
+                    dailyData = dailyData.filter(d => d.date < strNext);
                 }
 
-                const total = sales.reduce((acc, s) => acc + s.total_amount, 0);
-                const ticket = sales.length ? total / sales.length : 0;
-                document.getElementById('kpi-revenue').innerText = `R$ ${total.toFixed(2)}`;
-                document.getElementById('kpi-orders').innerText = sales.length;
+                let totalRevenue = 0;
+                let totalOrders = 0;
+                let catTotals = {};
+                let prodTotals = {};
+                const chartMap = {};
+
+                dailyData.forEach(day => {
+                    totalRevenue += day.total_revenue || 0;
+                    totalOrders += day.order_count || 0;
+                    
+                    const [yyyy, mm, dd] = day.date.split('-');
+                    const dateLabel = `${dd}/${mm}`;
+                    chartMap[dateLabel] = day.total_revenue || 0;
+
+                    // --- TRATAMENTO DE CATEGORIAS (Robustez) ---
+                    // Verifica chaves planas tipo "categories.lanche"
+                    for (const key in day) {
+                        if (key.startsWith('categories.')) {
+                            const name = key.split('.')[1].toUpperCase();
+                            catTotals[name] = (catTotals[name] || 0) + day[key];
+                        }
+                    }
+                    // Verifica objeto aninhado (caso tenha sido salvo corretamente)
+                    if (day.categories && typeof day.categories === 'object') {
+                        for (const [k, v] of Object.entries(day.categories)) {
+                            const name = k.toUpperCase();
+                            catTotals[name] = (catTotals[name] || 0) + v;
+                        }
+                    }
+
+                    // --- TRATAMENTO DE PRODUTOS ---
+                    for (const key in day) {
+                        if (key.startsWith('products.')) {
+                            const name = key.split('.')[1].replace(/_/g, ' ').toUpperCase();
+                            prodTotals[name] = (prodTotals[name] || 0) + day[key];
+                        }
+                    }
+                    if (day.products && typeof day.products === 'object') {
+                        for (const [k, v] of Object.entries(day.products)) {
+                            const name = k.replace(/_/g, ' ').toUpperCase();
+                            prodTotals[name] = (prodTotals[name] || 0) + v;
+                        }
+                    }
+                });
+
+                // ATUALIZA KPIs
+                const ticket = totalOrders ? totalRevenue / totalOrders : 0;
+                document.getElementById('kpi-revenue').innerText = `R$ ${totalRevenue.toFixed(2)}`;
+                document.getElementById('kpi-orders').innerText = totalOrders;
                 document.getElementById('kpi-ticket').innerText = `R$ ${ticket.toFixed(2)}`;
 
-                renderCharts(sales);
+                // ATUALIZA TOP 3
+                const sortedProds = Object.entries(prodTotals).sort((a,b) => b[1] - a[1]).slice(0, 3);
+                const topListEl = document.getElementById('top-products-list');
+                
+                if (topListEl) {
+                    if (sortedProds.length > 0) {
+                        topListEl.innerHTML = sortedProds.map((p, i) => {
+                            const medals = ['🥇', '🥈', '🥉'];
+                            return `<div style="margin-bottom: 6px; font-size: 0.9rem;">${medals[i]} <strong>${p[0]}</strong> <span style="float:right; opacity: 0.7;">${p[1]} un</span></div>`;
+                        }).join('');
+                    } else {
+                        topListEl.innerHTML = '<span style="opacity: 0.5;">Sem dados.</span>';
+                    }
+                }
+
+                renderCharts(chartMap, catTotals);
             });
         };
-
         
-        function renderCharts(sales) {
+        function renderCharts(dailyDataMap, categoryDataMap) {
             const isDark = document.body.classList.contains('dark-mode');
             const color = isDark ? '#e0e0e0' : '#333';
-
-            const dailyData = {};
-            sales.forEach(s => {
-                const d = new Date(s.created_at.toDate()).toLocaleDateString('pt-BR', {day:'2-digit', month:'2-digit'});
-                dailyData[d] = (dailyData[d] || 0) + s.total_amount;
-            });
-
-            const catData = {};
-            sales.forEach(s => s.items.forEach(i => {
-                const p = cachedProducts.find(cp => cp.id === i.product_id || cp.name === i.name);
-                const c = p ? p.category : 'Outros';
-                catData[c] = (catData[c] || 0) + i.qty;
-            }));
 
             const ctx1 = document.getElementById('salesChart').getContext('2d');
             const ctx2 = document.getElementById('categoryChart').getContext('2d');
@@ -717,32 +839,41 @@
             if(salesChart) salesChart.destroy();
             if(catChart) catChart.destroy();
 
+            // Gráfico de Linha
             salesChart = new Chart(ctx1, {
                 type: 'line',
                 data: {
-                    labels: Object.keys(dailyData),
+                    labels: Object.keys(dailyDataMap),
                     datasets: [{
                         label: 'Vendas (R$)',
-                        data: Object.values(dailyData),
+                        data: Object.values(dailyDataMap),
                         borderColor: '#2e7d32',
                         backgroundColor: 'rgba(46, 125, 50, 0.1)',
                         fill: true,
                         tension: 0.3
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { title: {display:true, text:'Evolução de Vendas', color: color}, legend: {labels:{color:color}} }, scales: { x: {ticks:{color:color}}, y: {ticks:{color:color}} } }
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    plugins: { title: {display:true, text:'Evolução Diária', color: color}, legend: {labels:{color:color}} }, 
+                    scales: { x: {ticks:{color:color}}, y: {ticks:{color:color}} } 
+                }
             });
 
+            // Gráfico de Rosca
             catChart = new Chart(ctx2, {
                 type: 'doughnut',
                 data: {
-                    labels: Object.keys(catData).map(s => s.toUpperCase()),
+                    labels: Object.keys(categoryDataMap),
                     datasets: [{
-                        data: Object.values(catData),
+                        data: Object.values(categoryDataMap),
                         backgroundColor: ['#D32F2F', '#FFC107', '#1976D2', '#388E3C', '#7B1FA2']
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false, plugins: { title: {display:true, text:'Mix de Produtos', color: color}, legend: {labels:{color:color}, position: 'right'} } }
+                options: { 
+                    responsive: true, maintainAspectRatio: false, 
+                    plugins: { title: {display:true, text:'Mix de Categorias', color: color}, legend: {labels:{color:color}, position: 'right'} } 
+                }
             });
         }
         

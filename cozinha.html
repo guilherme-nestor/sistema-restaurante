@@ -54,6 +54,7 @@
         /* Status Cores */
         .status-pending { border-left-color: #ffc107; } /* Amarelo */
         .status-preparing { border-left-color: #2196f3; } /* Azul */
+        .status-cancelled { border-left-color: #ef5350; opacity: 0.8; }
 
         /* Tag de Modificado */
         .modified-tag { background: #D32F2F; color: white; font-weight: bold; text-align: center; padding: 8px; font-size: 1rem; letter-spacing: 1px; animation: pulse 2s infinite; text-transform: uppercase; }
@@ -118,9 +119,17 @@
     <script type="module">
         import { SaasService } from './js/SaasService.js';
         
-        // Inicializa API (Dinâmica pela URL)
+        // Inicializa API
         const api = new SaasService(); 
         
+        // --- 1. BLOQUEIO DE SEGURANÇA E LOGIN ---
+        // Adicionamos isso para identificar que quem está acessando é um funcionário
+        api.requireAuth((user, role) => {
+            // Se chegou aqui, está logado e o checkStatus do SaasService 
+            // já validou se a loja está aberta ou fechada.
+            initKitchen();
+        }, ['owner', 'employee']); // Permite Dono e Funcionários
+
         // --- LÓGICA DE TEMA ---
         window.toggleTheme = () => {
             const body = document.body;
@@ -139,77 +148,6 @@
         if (localStorage.getItem('kds_theme') === 'light') {
             document.body.classList.add('light-mode');
             document.getElementById('theme-icon').innerText = 'dark_mode';
-        }
-
-        const container = document.getElementById('orders-container');
-
-        // --- ESCUTAR PEDIDOS ---
-        api.listenToOrders((orders) => {
-            container.innerHTML = ""; 
-            
-            // KDS só vê: Pendente (Novo) e Preparando
-            const activeOrders = orders.filter(o => o.status === 'pending' || o.status === 'preparing');
-
-            // Ordena: Mais antigos primeiro (FIFO - First In First Out)
-            activeOrders.sort((a, b) => {
-                const dateA = a.created_at?.toMillis ? a.created_at.toMillis() : (a.created_at?.getTime ? a.created_at.getTime() : 0);
-                const dateB = b.created_at?.toMillis ? b.created_at.toMillis() : (b.created_at?.getTime ? b.created_at.getTime() : 0);
-                
-                return dateA - dateB; // <--- MUDANÇA AQUI (Crescente: Antigo -> Novo)
-            });
-
-            if (activeOrders.length === 0) {
-                container.innerHTML = `
-                    <div style='grid-column: 1/-1; text-align: center; padding: 100px 20px; color: var(--secondary-text); opacity: 0.7;'>
-                        <span class="material-icons-round" style="font-size: 6rem; margin-bottom: 20px;">done_all</span>
-                        <div style="font-size: 2rem; font-weight: bold;">Tudo limpo!</div>
-                        <div style="font-size: 1.2rem;">Aguardando novos pedidos...</div>
-                    </div>`;
-                return;
-            }
-
-            activeOrders.forEach(order => {
-                const card = createOrderCard(order);
-                container.appendChild(card);
-            });
-        });
-
-        function createOrderCard(order) {
-            const div = document.createElement('div');
-            div.className = `order-card status-${order.status}`;
-            
-            // Tag se foi editado pelo garçom após envio
-            let modifiedHtml = order.is_modified ? `<div class="modified-tag">⚠️ PEDIDO ALTERADO</div>` : '';
-
-            const date = order.created_at?.toDate ? order.created_at.toDate() : new Date();
-            const timeString = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
-
-            // Lista de Itens
-            let itemsHtml = order.items.map(item => `
-                <div class="item-line">
-                    <div class="item-main">
-                        <span class="item-qty">${item.qty}</span>
-                        <span class="item-name">${item.name}</span>
-                    </div>
-                    ${item.notes ? `<span class="item-note">📝 ${item.notes}</span>` : ''} 
-                </div>
-            `).join('');
-
-            // Botão de Ação (Único clique para finalizar)
-            div.innerHTML = `
-                ${modifiedHtml}
-                <div class="card-header">
-                    <span class="table-num">Mesa ${order.table_number}</span>
-                    <span class="timer">${timeString}</span>
-                </div>
-                <div class="card-body">${itemsHtml}</div>
-                <div class="card-actions">
-                    <button class="btn-ready" onclick="window.updateStatus('${order.id}', 'ready')">
-                        <span class="material-icons-round">check</span> PRONTO
-                    </button>
-                </div>
-            `;
-            return div;
         }
 
         // --- AÇÕES ---
@@ -233,6 +171,85 @@
             const now = new Date();
             document.getElementById('clock').innerText = now.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
         }, 1000);
+
+        // --- INICIALIZAÇÃO DO SISTEMA (Só roda se autenticado) ---
+        function initKitchen() {
+            const container = document.getElementById('orders-container');
+
+            // --- ESCUTAR PEDIDOS ---
+            api.listenToOrders((orders) => {
+                container.innerHTML = ""; 
+                
+                // KDS só vê: Pendente (Novo), Preparando e Cancelado (para limpar)
+                const activeOrders = orders.filter(o => o.status === 'pending' || o.status === 'preparing' || o.status === 'cancelled');
+
+                // Ordena: Mais antigos primeiro (FIFO)
+                activeOrders.sort((a, b) => {
+                    const dateA = a.created_at?.toMillis ? a.created_at.toMillis() : (a.created_at?.getTime ? a.created_at.getTime() : 0);
+                    const dateB = b.created_at?.toMillis ? b.created_at.toMillis() : (b.created_at?.getTime ? b.created_at.getTime() : 0);
+                    return dateA - dateB; 
+                });
+
+                if (activeOrders.length === 0) {
+                    container.innerHTML = `
+                        <div style='grid-column: 1/-1; text-align: center; padding: 100px 20px; color: var(--secondary-text); opacity: 0.7;'>
+                            <span class="material-icons-round" style="font-size: 6rem; margin-bottom: 20px;">done_all</span>
+                            <div style="font-size: 2rem; font-weight: bold;">Tudo limpo!</div>
+                            <div style="font-size: 1.2rem;">Aguardando novos pedidos...</div>
+                        </div>`;
+                    return;
+                }
+
+                activeOrders.forEach(order => {
+                    const card = createOrderCard(order);
+                    container.appendChild(card);
+                });
+            });
+        }
+
+        function createOrderCard(order) {
+            const div = document.createElement('div');
+            div.className = `order-card status-${order.status}`;
+            
+            let modifiedHtml = order.is_modified ? `<div class="modified-tag">⚠️ PEDIDO ALTERADO</div>` : '';
+            
+            if (order.status === 'cancelled') {
+                modifiedHtml = `<div class="modified-tag" style="background: #ef5350;">🚫 PEDIDO CANCELADO</div>`;
+            }
+
+            const date = order.created_at?.toDate ? order.created_at.toDate() : new Date();
+            const timeString = date.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+
+            let itemsHtml = order.items.map(item => `
+                <div class="item-line">
+                    <div class="item-main">
+                        <span class="item-qty">${item.qty}</span>
+                        <span class="item-name">${item.name}</span>
+                    </div>
+                    ${item.notes ? `<span class="item-note">📝 ${item.notes}</span>` : ''} 
+                </div>
+            `).join('');
+
+            let btnAction = '';
+            if (order.status === 'cancelled') {
+                btnAction = `<button class="btn-ready" style="background: #757575;" onclick="window.updateStatus('${order.id}', 'finalizado')">🗑️ Limpar da Tela</button>`;
+            } else {
+                btnAction = `<button class="btn-ready" onclick="window.updateStatus('${order.id}', 'ready')"><span class="material-icons-round">check</span> PRONTO</button>`;
+            }
+
+            div.innerHTML = `
+                ${modifiedHtml}
+                <div class="card-header">
+                    <span class="table-num">Mesa ${order.table_number}</span>
+                    <span class="timer">${timeString}</span>
+                </div>
+                <div class="card-body">${itemsHtml}</div>
+                <div class="card-actions">
+                    ${btnAction}
+                </div>
+            `;
+            return div;
+        }
     </script>
 </body>
 </html>
