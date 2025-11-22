@@ -61,9 +61,9 @@ export class SaasService {
         // O PORTEIRO (Bloqueio): Só inicia se for uma página de cliente ativa
         if (!isSuperAdmin && !isLoginPage && !isSetupPage && this.restaurantId) {
             this.checkStatus(); 
-            if (window.location.pathname.includes('admin.html') || window.location.pathname.includes('index.html')) {
-                this.checkAndRunMaintenance();
-            }
+            //if (window.location.pathname.includes('admin.html') || window.location.pathname.includes('index.html')) {
+            //    this.checkAndRunMaintenance();
+            //}
         }
     }
 
@@ -102,6 +102,11 @@ export class SaasService {
                         this.checkStatus();
                     }
                     this.checkStatus();
+
+                    if (window.location.pathname.includes('index.html')) {
+                        console.log("[System] Usuário autenticado. Iniciando verificação de manutenção...");
+                        this.checkAndRunMaintenance();
+                    }
                 }
 
                 // VERIFICAÇÃO DE PERMISSÃO ESPECÍFICA (Para bloquear funcionário no admin)
@@ -342,71 +347,75 @@ export class SaasService {
     async checkAndRunMaintenance() {
         const lastRun = localStorage.getItem(`maintenance_last_run_${this.restaurantId}`);
         const today = new Date().toDateString();
-        if (lastRun === today) return;
+        
+        // DEBUG: Ver o que está acontecendo
+        console.log(`[Manutenção] Última execução: ${lastRun}. Hoje: ${today}`);
 
+        if (lastRun === today) {
+            console.log("[Manutenção] Já rodou hoje. Pulando.");
+            return;
+        }
+
+        console.log("[Manutenção] Buscando configurações...");
         const config = await this.getRestaurantConfig();
+        
+        console.log("[Manutenção] Configuração recebida:", config); // Verifique se retentionDays é 1 aqui
+
         const retentionDays = config.retentionDays || DEFAULT_RETENTION_DAYS; 
-        this.cleanupOldOrders(retentionDays).then(() => localStorage.setItem(`maintenance_last_run_${this.restaurantId}`, today));
+        
+        console.log(`[Manutenção] Iniciando limpeza com ${retentionDays} dias...`);
+        
+        await this.cleanupOldOrders(retentionDays);
+        
+        localStorage.setItem(`maintenance_last_run_${this.restaurantId}`, today);
+        console.log("[Manutenção] Concluída e registrada.");
     }
 
     // =========================================================================
-    // MANUTENÇÃO AUTOMÁTICA (MODIFICADO)
+    // MANUTENÇÃO AUTOMÁTICA (VERSÃO FINAL LIMPA)
     // =========================================================================
-
-    async cleanupOldOrders(analyticsRetentionDays) {
-        // Configurações de segurança
-        if (!analyticsRetentionDays || analyticsRetentionDays < 1) analyticsRetentionDays = 30;
-
-        // 1. DATA DE CORTE PARA PEDIDOS (ORDERS)
-        // A lógica aqui é: Apagar TUDO que for menor que "Hoje 00:00"
-        // Ou seja, mantém apenas os pedidos do dia atual.
+    async cleanupOldOrders(retentionDays) {
+        // 1. Definições de Data
+        const safeDays = (retentionDays && retentionDays > 0) ? retentionDays : 30;
+        
+        // Data para Ordens: Hoje 00:00 (Apaga tudo que não é de hoje)
         const startOfToday = new Date();
         startOfToday.setHours(0, 0, 0, 0);
 
-        // 2. DATA DE CORTE PARA HISTÓRICO (ANALYTICS)
-        // Mantém o histórico baseado na configuração (ex: 30 dias)
-        const analyticsCutoffDate = new Date();
-        analyticsCutoffDate.setDate(analyticsCutoffDate.getDate() - analyticsRetentionDays);
-        const analyticsCutoffString = analyticsCutoffDate.toISOString().split('T')[0]; // YYYY-MM-DD
+        // Data para Analytics: Hoje - Dias Configurados (String YYYY-MM-DD)
+        const analyticsCutoff = new Date();
+        analyticsCutoff.setDate(analyticsCutoff.getDate() - safeDays);
+        const analyticsCutoffStr = analyticsCutoff.toISOString().split('T')[0];
 
         let totalDeleted = 0;
         const BATCH_SIZE = 400;
 
-        console.log(`[Manutenção] Limpando Ordens anteriores a: ${startOfToday.toLocaleString()}`);
-        console.log(`[Manutenção] Limpando Analytics anteriores a: ${analyticsCutoffString}`);
+        console.log(`[System] Manutenção: Limpando Ordens < Hoje | Analytics < ${analyticsCutoffStr} (${safeDays} dias)`);
 
         try {
-            // --- FASE 1: Limpar PEDIDOS (orders) ---
-            // Critério: Tudo que foi criado ANTES de hoje a meia-noite
+            // --- FASE 1: LIMPEZA DE ORDENS (Orders) ---
             while (true) {
                 const q = query(
                     collection(this.db, "orders"), 
                     where("restaurant_id", "==", this.restaurantId),
-                    where("created_at", "<", startOfToday), // <--- MUDANÇA AQUI: Usa o início do dia
+                    where("created_at", "<", startOfToday),
                     limit(BATCH_SIZE)
                 );
-
+                
                 const snapshot = await getDocs(q);
                 if (snapshot.empty) break;
 
                 const batch = writeBatch(this.db);
-                snapshot.docs.forEach((doc) => {
-                    batch.delete(doc.ref);
-                    totalDeleted++;
-                });
-
+                snapshot.docs.forEach(doc => { batch.delete(doc.ref); totalDeleted++; });
                 await batch.commit();
-                console.log(`[Manutenção] Lote de ordens antigas excluído.`);
-                await new Promise(resolve => setTimeout(resolve, 100)); 
             }
 
-            // --- FASE 2: Limpar ANALYTICS (daily_analytics) ---
-            // Critério: Respeita os dias de retenção (ex: apaga só o que for mais velho que 30 dias)
+            // --- FASE 2: LIMPEZA DE HISTÓRICO (Analytics) ---
             while (true) {
                 const q = query(
                     collection(this.db, "daily_analytics"), 
                     where("restaurant_id", "==", this.restaurantId),
-                    where("date", "<", analyticsCutoffString),
+                    where("date", "<", analyticsCutoffStr),
                     limit(BATCH_SIZE)
                 );
 
@@ -414,21 +423,15 @@ export class SaasService {
                 if (snapshot.empty) break;
 
                 const batch = writeBatch(this.db);
-                snapshot.docs.forEach((doc) => {
-                    batch.delete(doc.ref);
-                    totalDeleted++;
-                });
-
+                snapshot.docs.forEach(doc => { batch.delete(doc.ref); totalDeleted++; });
                 await batch.commit();
-                console.log(`[Manutenção] Lote de analytics antigos excluído.`);
-                await new Promise(resolve => setTimeout(resolve, 100));
             }
 
         } catch (e) {
-            console.error("Falha na limpeza automática:", e);
+            console.error("[System] Erro durante a manutenção automática:", e);
         }
         
-        return totalDeleted;
+        if (totalDeleted > 0) console.log(`[System] Limpeza concluída. ${totalDeleted} itens antigos removidos.`);
     }
 
     // =========================================================================
@@ -505,32 +508,29 @@ export class SaasService {
     }
 
     // =========================================================================
-    // ADMIN DO CLIENTE
+    // ADMIN DO CLIENTE (CORRIGIDO)
     // =========================================================================
     async getRestaurantConfig() {
         try {
             const q = query(collection(this.db, "restaurants"), where("restaurant_id", "==", this.restaurantId));
             const s = await getDocs(q);
             
-            // CORREÇÃO 1: Se não encontrou restaurante, retornamos isOpen: true (padrão)
-            // Antes você tentava acessar 'd.is_open', mas 'd' não existia aqui.
-            if(s.empty) {
-                return { serviceFeePercentage: 0, retentionDays: 30, restaurantName: "Não Encontrado", isOpen: true };
-            }
+            if(s.empty) return { serviceFeePercentage: 0, retentionDays: 30, restaurantName: "Não Encontrado", isOpen: true };
             
-            // Aqui definimos 'd'
             const d = s.docs[0].data();
             
+            // DEBUG: Ver o que veio do banco
+            console.log("[DEBUG Config] Dados brutos do restaurante:", d);
+
             return { 
                 serviceFeePercentage: d.config_ops?.taxa_servico || 0, 
                 docId: s.docs[0].id, 
                 restaurantName: d.name, 
-                retentionDays: d.config_ops?.retention_days || 30,
-                isOpen: d.is_open !== false // Se for undefined, considera aberto
+                // CORREÇÃO AQUI: Garante que lê o retention_days ou usa 30 se for nulo/indefinido
+                retentionDays: d.config_ops?.retention_days ? parseInt(d.config_ops.retention_days) : 30,
+                isOpen: d.is_open !== false 
             };
         } catch (e) { 
-            // CORREÇÃO 2: Em caso de erro, retornamos isOpen: true (padrão)
-            // Antes você tentava acessar 'd.is_open', mas 'd' não existe no bloco catch.
             console.error("Erro config:", e);
             return { serviceFeePercentage: 0, docId: null, restaurantName: "Erro", retentionDays: 30, isOpen: true }; 
         }
