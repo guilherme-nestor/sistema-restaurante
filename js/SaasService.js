@@ -47,23 +47,21 @@ export class SaasService {
                 
                 if (urlId) {
                     this.restaurantId = urlId;
-                    // Salva no storage para persistência (F5)
                     localStorage.setItem('current_restaurant_id', urlId);
                 } else {
-                    // Recupera do storage ou usa fallback
                     this.restaurantId = localStorage.getItem('current_restaurant_id') || "empresa_01";
                 }
             }
+
+            if (this.restaurantId && window.history.replaceState) {
+                const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname.replace('.html', '');
+                window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+            }
         }
-        
-        console.log("SaaS Iniciado. Contexto:", isSuperAdmin ? "SUPER ADMIN" : "CLIENTE", "| ID:", this.restaurantId);
         
         // O PORTEIRO (Bloqueio): Só inicia se for uma página de cliente ativa
         if (!isSuperAdmin && !isLoginPage && !isSetupPage && this.restaurantId) {
-            this.checkStatus(); 
-            //if (window.location.pathname.includes('admin.html') || window.location.pathname.includes('index.html')) {
-            //    this.checkAndRunMaintenance();
-            //}
+            this.checkStatus();
         }
     }
 
@@ -104,7 +102,6 @@ export class SaasService {
                     this.checkStatus();
 
                     if (window.location.pathname.includes('index.html')) {
-                        console.log("[System] Usuário autenticado. Iniciando verificação de manutenção...");
                         this.checkAndRunMaintenance();
                     }
                 }
@@ -347,28 +344,18 @@ export class SaasService {
     async checkAndRunMaintenance() {
         const lastRun = localStorage.getItem(`maintenance_last_run_${this.restaurantId}`);
         const today = new Date().toDateString();
-        
-        // DEBUG: Ver o que está acontecendo
-        console.log(`[Manutenção] Última execução: ${lastRun}. Hoje: ${today}`);
 
         if (lastRun === today) {
-            console.log("[Manutenção] Já rodou hoje. Pulando.");
             return;
         }
 
-        console.log("[Manutenção] Buscando configurações...");
         const config = await this.getRestaurantConfig();
         
-        console.log("[Manutenção] Configuração recebida:", config); // Verifique se retentionDays é 1 aqui
-
         const retentionDays = config.retentionDays || DEFAULT_RETENTION_DAYS; 
-        
-        console.log(`[Manutenção] Iniciando limpeza com ${retentionDays} dias...`);
         
         await this.cleanupOldOrders(retentionDays);
         
         localStorage.setItem(`maintenance_last_run_${this.restaurantId}`, today);
-        console.log("[Manutenção] Concluída e registrada.");
     }
 
     // =========================================================================
@@ -389,8 +376,6 @@ export class SaasService {
 
         let totalDeleted = 0;
         const BATCH_SIZE = 400;
-
-        console.log(`[System] Manutenção: Limpando Ordens < Hoje | Analytics < ${analyticsCutoffStr} (${safeDays} dias)`);
 
         try {
             // --- FASE 1: LIMPEZA DE ORDENS (Orders) ---
@@ -431,7 +416,6 @@ export class SaasService {
             console.error("[System] Erro durante a manutenção automática:", e);
         }
         
-        if (totalDeleted > 0) console.log(`[System] Limpeza concluída. ${totalDeleted} itens antigos removidos.`);
     }
 
     // =========================================================================
@@ -518,9 +502,6 @@ export class SaasService {
             if(s.empty) return { serviceFeePercentage: 0, retentionDays: 30, restaurantName: "Não Encontrado", isOpen: true };
             
             const d = s.docs[0].data();
-            
-            // DEBUG: Ver o que veio do banco
-            console.log("[DEBUG Config] Dados brutos do restaurante:", d);
 
             return { 
                 serviceFeePercentage: d.config_ops?.taxa_servico || 0, 
@@ -659,8 +640,6 @@ export class SaasService {
                 });
             }
 
-            console.log(`Atualizando Analytics: ${analyticsId}`, { total: order.total_amount });
-
             // Salva com merge
             await setDoc(analyticsRef, {
                 restaurant_id: this.restaurantId,
@@ -681,8 +660,6 @@ export class SaasService {
     // 3. LEITURA: Busca documentos agregados
     listenToAnalytics(startDate, callback, errorCallback) {
         const strDate = startDate.toISOString().split('T')[0];
-        console.log(`Buscando Analytics desde: ${strDate} para ${this.restaurantId}`);
-        
         const q = query(
             collection(this.db, "daily_analytics"),
             where("restaurant_id", "==", this.restaurantId),
@@ -693,7 +670,6 @@ export class SaasService {
             const dailyData = [];
             snapshot.forEach((doc) => {
                 const data = doc.data();
-                console.log("Dado Analytics Recebido:", data); // Debug
                 dailyData.push(data);
             });
             
