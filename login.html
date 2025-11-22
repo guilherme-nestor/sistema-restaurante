@@ -104,7 +104,7 @@
             errorDiv.style.display = 'none';
 
             try {
-                // Realiza login e recebe dados do usuário (role e restaurantId)
+                // Realiza login e recebe dados do usuário (role e restaurantId).
                 const authData = await api.login(email, password);
                 
                 if (authData.role === 'super_admin') {
